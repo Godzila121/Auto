@@ -1,22 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="#E3F2FD">
+    android:background="#FFFFFF">
 
-    <Button
-        android:id="@+id/button_one"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Кнопка 1"
-        android:layout_marginBottom="16dp" />
+    <!-- Основний контент -->
+    <FrameLayout
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/button_two"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Кнопка 2" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Вміст другої сторінки"
+            android:textSize="20sp"
+            android:textColor="#333333"/>
+    </FrameLayout>
+
+    <!-- Нижнє меню з 3 іконками -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:background="#F5F5F5"
+        android:elevation="4dp">
+
+        <ImageView
+            android:id="@+id/button_search"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_search"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Пошук" />
+
+        <ImageView
+            android:id="@+id/button_favorite"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_favorite"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Обране" />
+
+        <ImageView
+            android:id="@+id/button_account"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_account"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Профіль" />
+    </LinearLayout>
 </LinearLayout>

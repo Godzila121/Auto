@@ -15,6 +15,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         new Handler().postDelayed(() -> {
             // Анімація зникнення
             findViewById(android.R.id.content).startAnimation(
