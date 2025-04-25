@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="#FFFFFF"
+    android:padding="24dp">
 
     <ImageView
         android:id="@+id/icon_profile"
@@ -18,21 +19,62 @@
         android:focusable="true" />
 
 
+
     <!-- Основний контент -->
-    <FrameLayout
-        android:id="@+id/main_content"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center">
+        android:layout_weight="1">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Вміст другої сторінки"
-            android:textSize="20sp"
-            android:textColor="#333333"/>
-    </FrameLayout>
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sign Up"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="24dp"/>
+
+            <EditText
+                android:id="@+id/input_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Введіть вашу пошту"
+                android:inputType="textEmailAddress"
+                android:padding="12dp"
+                android:textColor="#000000"
+                android:textColorHint="#888888"
+                android:background="@drawable/edittext_background"
+                android:layout_marginBottom="16dp" />
+
+            <EditText
+                android:id="@+id/input_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Введіть пароль"
+                android:inputType="textPassword"
+                android:padding="12dp"
+                android:textColor="#000000"
+                android:textColorHint="#888888"
+                android:background="@drawable/edittext_background"
+                android:layout_marginBottom="24dp" />
+
+            <Button
+                android:id="@+id/button_register"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Зареєструватися"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"/>
+
+        </LinearLayout>
+    </ScrollView>
 
     <!-- Нижнє меню з 3 іконками -->
     <androidx.cardview.widget.CardView
