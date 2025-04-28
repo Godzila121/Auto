@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/car_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp"
+    android:layout_margin="8dp"
+    android:padding="16dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Зображення машини -->
+        <ImageView
+            android:id="@+id/car_image"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_car" />
+
+        <!-- Назва машини -->
+        <TextView
+            android:id="@+id/car_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:text="Car Name"
+            android:textSize="16sp"
+            android:textColor="#000000" />
+
+        <!-- Кнопка сердечка -->
+        <ImageButton
+            android:id="@+id/heart_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/heart_button"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/heart_button"
+            android:padding="4dp" />
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

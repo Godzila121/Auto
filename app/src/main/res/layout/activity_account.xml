@@ -9,8 +9,8 @@
 
     <ImageView
         android:id="@+id/icon_profile"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_account"
@@ -53,6 +53,7 @@
                 android:background="@drawable/edittext_background"
                 android:layout_marginBottom="16dp" />
 
+
             <EditText
                 android:id="@+id/input_password"
                 android:layout_width="match_parent"
@@ -76,7 +77,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Нижнє меню з 3 іконками -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -90,6 +90,7 @@
             android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center">
+
 
             <ImageView
                 android:id="@+id/button_search"

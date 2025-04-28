@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,10 +5,11 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
+
     <ImageView
         android:id="@+id/icon_profile"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_account"
@@ -17,8 +17,6 @@
         android:clickable="true"
         android:focusable="true" />
 
-
-    <!-- Основний контент -->
     <FrameLayout
         android:id="@+id/main_content"
         android:layout_width="match_parent"
@@ -26,15 +24,14 @@
         android:layout_weight="1"
         android:gravity="center">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Вміст другої сторінки"
-            android:textSize="20sp"
-            android:textColor="#333333"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"/>
+
     </FrameLayout>
 
-    <!-- Нижнє меню з 3 іконками -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -81,6 +78,7 @@
                 android:src="@drawable/ic_account"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Профіль" />
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

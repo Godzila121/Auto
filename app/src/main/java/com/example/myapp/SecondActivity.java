@@ -2,18 +2,25 @@ package com.example.myapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.Toast;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SecondActivity extends AppCompatActivity {
 
     private ImageView buttonSearch;
     private ImageView buttonFavorite;
     private ImageView buttonAccount;
+    private RecyclerView recyclerView;
+    private CarAdapter carAdapter;
+    private List<Car> carList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,34 +30,41 @@ public class SecondActivity extends AppCompatActivity {
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
+        recyclerView = findViewById(R.id.recyclerView);
 
-        buttonSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(SecondActivity.this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show();
-                overridePendingTransition(0, 0);
+        // Ініціалізуємо список машин
+        carList = new ArrayList<>();
+        carList.add(new Car("Tesla Model S", "Electric", 2022, "USA", 79999.99));
+        carList.add(new Car("BMW 5 Series", "Sedan", 2021, "Germany", 54999.99));
+        carList.add(new Car("Audi A6", "Sedan", 2020, "Germany", 49999.99));
+        carList.add(new Car("Honda Civic", "Compact", 2023, "Japan", 22999.99));
+        carList.add(new Car("Ford Mustang", "Coupe", 2022, "USA", 55999.99));
 
-            }
+
+
+        // Ініціалізуємо адаптер
+        carAdapter = new CarAdapter(this, carList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(carAdapter);
+
+        buttonSearch.setOnClickListener(v -> {
+            Toast.makeText(SecondActivity.this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show();
+            overridePendingTransition(0, 0);
         });
 
-        buttonFavorite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(SecondActivity.this, FavoriteActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-
-            }
+        buttonFavorite.setOnClickListener(v -> {
+            Intent intent = new Intent(SecondActivity.this, FavoriteActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
         });
 
-        buttonAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(SecondActivity.this, AccountActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-
-            }
+        buttonAccount.setOnClickListener(v -> {
+            Intent intent = new Intent(SecondActivity.this, AccountActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
         });
+
+
     }
+
 }
