@@ -17,7 +17,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
     private Context context;
     private List<Car> carList;
-    private List<Car> favoriteCars;  // Список для улюблених машин
+    private List<Car> favoriteCars;
 
     public CarAdapter(Context context, List<Car> carList, List<Car> favoriteCars) {
         this.context = context;
@@ -36,23 +36,22 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         Car car = carList.get(position);
         holder.carName.setText(car.getName());
 
-        // Перевірка, чи є машина в улюблених
+
         if (favoriteCars.contains(car)) {
-            holder.heartButton.setImageResource(R.drawable.heart_button);  // Заповнене сердечко
+            holder.heartButton.setImageResource(R.drawable.heart_button);
         } else {
-            holder.heartButton.setImageResource(R.drawable.ic_favorite);  // Порожнє сердечко
+            holder.heartButton.setImageResource(R.drawable.ic_favorite);
         }
 
         holder.heartButton.setOnClickListener(v -> {
             if (!favoriteCars.contains(car)) {
                 favoriteCars.add(car);
-                holder.heartButton.setImageResource(R.drawable.heart_button);  // Заповнене сердечко
+                holder.heartButton.setImageResource(R.drawable.heart_button);
             } else {
                 favoriteCars.remove(car);
-                holder.heartButton.setImageResource(R.drawable.ic_favorite);  // Порожнє сердечко
+                holder.heartButton.setImageResource(R.drawable.ic_favorite);
             }
 
-            // Зберігаємо зміни у SharedPreferences
             SharedPreferencesHelper.saveFavorites(context, favoriteCars);
             notifyItemChanged(position);
         });

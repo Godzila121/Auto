@@ -18,7 +18,6 @@
         android:background="?android:attr/selectableItemBackground"
         android:padding="16dp">
 
-        <!-- Зображення машини -->
         <ImageView
             android:id="@+id/car_image"
             android:layout_width="60dp"
@@ -26,7 +25,6 @@
             android:src="@drawable/ic_car"
             android:contentDescription="Car image" />
 
-        <!-- Назва машини -->
         <TextView
             android:id="@+id/car_name"
             android:layout_width="0dp"
@@ -37,7 +35,6 @@
             android:textSize="16sp"
             android:textColor="#000000" />
 
-        <!-- Кнопка сердечка -->
         <ImageButton
             android:id="@+id/heart_button"
             android:layout_width="48dp"

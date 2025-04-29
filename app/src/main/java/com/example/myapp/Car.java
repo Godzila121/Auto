@@ -4,12 +4,11 @@ import java.io.Serializable;
 
 public class Car implements Serializable {
     private String name;
-    private String type; // тип машини (наприклад, "Electric", "Sedan")
+    private String type;
     private int year;
-    private String country; // країна
+    private String country;
     private double price;
 
-    // Оновлений конструктор без зображення
     public Car(String name, String type, int year, String country, double price) {
         this.name = name;
         this.type = type;
@@ -18,7 +17,6 @@ public class Car implements Serializable {
         this.price = price;
     }
 
-    // Геттери
     public String getName() {
         return name;
     }

@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 public class AccountActivity extends AppCompatActivity {
 
     private ImageView buttonSearch, buttonFavorite, buttonAccount, iconProfile;
@@ -22,13 +23,18 @@ public class AccountActivity extends AppCompatActivity {
         inputEmail = findViewById(R.id.input_email);
         inputPassword = findViewById(R.id.input_password);
         buttonRegister = findViewById(R.id.button_register);
-        buttonLogout = findViewById(R.id.button_logout);  // Кнопка "Вийти"
+        buttonLogout = findViewById(R.id.button_logout);
 
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
 
-        // Реєстрація
+        if (isUserRegistered()) {
+            hideForm();
+        } else {
+            showForm();
+        }
+
         buttonRegister.setOnClickListener(v -> {
             String email = inputEmail.getText().toString().trim();
             String password = inputPassword.getText().toString().trim();
@@ -40,25 +46,22 @@ public class AccountActivity extends AppCompatActivity {
 
             saveUser(email, password);
             Toast.makeText(this, "Реєстрація успішна!", Toast.LENGTH_SHORT).show();
-            hideForm();  // Сховати форму після реєстрації
+            hideForm();
         });
 
-        // Профіль
         iconProfile.setOnClickListener(v -> {
             if (isUserRegistered()) {
-                String userEmail = getUserEmail();  // Отримуємо email користувача
+                String userEmail = getUserEmail();
                 Toast.makeText(this, "Ви зареєстровані як: " + userEmail, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Зареєструйтесь, будь ласка", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Кнопка "Вийти"
         buttonLogout.setOnClickListener(v -> {
-            logout();  // Викликаємо метод для виходу з акаунта
+            logout();
         });
 
-        // Навігація
         buttonSearch.setOnClickListener(v -> {
             startActivity(new Intent(this, SecondActivity.class));
             overridePendingTransition(0, 0);
@@ -97,19 +100,24 @@ public class AccountActivity extends AppCompatActivity {
         inputEmail.setVisibility(View.GONE);
         inputPassword.setVisibility(View.GONE);
         buttonRegister.setVisibility(View.GONE);
+        buttonLogout.setVisibility(View.VISIBLE);
     }
 
-    // Метод для виходу з акаунта
-    private void logout() {
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();  // Очищаємо всі дані
-        editor.apply();
-
-        // Після виходу, показуємо форму реєстрації
+    private void showForm() {
         inputEmail.setVisibility(View.VISIBLE);
         inputPassword.setVisibility(View.VISIBLE);
         buttonRegister.setVisibility(View.VISIBLE);
+        buttonLogout.setVisibility(View.GONE);
+    }
+
+    private void logout() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        editor.apply();
+
+
+        showForm();
         Toast.makeText(this, "Ви вийшли з акаунта", Toast.LENGTH_SHORT).show();
     }
 }

@@ -1,5 +1,6 @@
 package com.example.myapp;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -18,11 +19,13 @@ public class SecondActivity extends AppCompatActivity {
     private ImageView buttonSearch;
     private ImageView buttonFavorite;
     private ImageView buttonAccount;
+    private ImageView buttonProfile;
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
     private List<Car> carList;
-    private List<Car> favoriteCars;  // Додаємо список для улюблених машин
+    private List<Car> favoriteCars;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,46 +34,47 @@ public class SecondActivity extends AppCompatActivity {
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
+        buttonProfile = findViewById(R.id.button_profile);
         recyclerView = findViewById(R.id.recyclerView);
 
-        initializeCarList(); // Викликаємо метод для ініціалізації списку машин
+        initializeCarList();
 
-        // Отримуємо список улюблених машин переданий через Intent
-        Intent incomingIntent = getIntent();  // Змінили ім'я змінної на incomingIntent
+        Intent incomingIntent = getIntent();
         favoriteCars = (List<Car>) incomingIntent.getSerializableExtra("favorite_cars");
 
         if (favoriteCars == null) {
-            favoriteCars = new ArrayList<>();  // Якщо не передано, ініціалізуємо порожній список
+            favoriteCars = new ArrayList<>();
         }
 
-        // Створюємо адаптер, передаючи всі три параметри
         carAdapter = new CarAdapter(this, carList, favoriteCars);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(carAdapter);
 
-        // Обробка натискання кнопки пошуку
         buttonSearch.setOnClickListener(v -> {
             Toast.makeText(SecondActivity.this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show();
             overridePendingTransition(0, 0);
         });
 
-        // Обробка натискання кнопки улюблених
         buttonFavorite.setOnClickListener(v -> {
-            Intent favoriteIntent = new Intent(SecondActivity.this, FavoriteActivity.class);  // Змінили ім'я змінної на favoriteIntent
-            favoriteIntent.putExtra("favorite_cars", new ArrayList<>(favoriteCars));  // Передаємо улюблені машини
+            Intent favoriteIntent = new Intent(SecondActivity.this, FavoriteActivity.class);
+            favoriteIntent.putExtra("favorite_cars", new ArrayList<>(favoriteCars));
             startActivity(favoriteIntent);
             overridePendingTransition(0, 0);
         });
 
-        // Обробка натискання кнопки акаунту
         buttonAccount.setOnClickListener(v -> {
-            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);  // Змінили ім'я змінної на accountIntent
+            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
+            startActivity(accountIntent);
+            overridePendingTransition(0, 0);
+        });
+
+        buttonProfile.setOnClickListener(v -> {
+            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
             startActivity(accountIntent);
             overridePendingTransition(0, 0);
         });
     }
 
-    // Метод для ініціалізації списку машин
     private void initializeCarList() {
         carList = new ArrayList<>();
         carList.add(new Car("Tesla Model S", "Electric", 2022, "USA", 79999.99));
