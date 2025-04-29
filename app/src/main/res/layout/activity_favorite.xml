@@ -28,11 +28,13 @@
 
         <!-- Текст, якщо немає улюблених -->
         <TextView
+            android:id="@+id/NoFavorites"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="No favorites yet"
-        android:textSize="20sp"
-        android:textColor="#333333"/>
+            android:textSize="20sp"
+            android:textColor="#333333"
+            android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_favorites"

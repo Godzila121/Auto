@@ -3,6 +3,7 @@ package com.example.myapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,6 +31,7 @@ public class FavoriteActivity extends AppCompatActivity {
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
+        TextView NoFavorites = findViewById(R.id.NoFavorites);
 
         // Обробка натискання кнопки пошуку
         buttonSearch.setOnClickListener(v -> {
@@ -59,7 +61,11 @@ public class FavoriteActivity extends AppCompatActivity {
         if (favoriteCars == null) {
             favoriteCars = new ArrayList<>();  // Якщо не знайдено, ініціалізуємо порожній список
         }
-
+        if (!favoriteCars.isEmpty()) {
+            NoFavorites.setVisibility(View.GONE);  // Приховуємо повідомлення
+        } else {
+            NoFavorites.setVisibility(View.VISIBLE);  // Відображаємо повідомлення
+        }
         // Налаштування RecyclerView
         recyclerView = findViewById(R.id.recycler_view_favorites);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
