@@ -43,4 +43,6 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="heart_button">Уподобати</string>
+    <string name="car_image">Car image</string>
+
 </resources>

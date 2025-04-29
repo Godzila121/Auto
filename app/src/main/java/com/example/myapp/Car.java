@@ -1,7 +1,8 @@
 package com.example.myapp;
+
 import java.io.Serializable;
 
-public class Car {
+public class Car implements Serializable {
     private String name;
     private String type; // тип машини (наприклад, "Electric", "Sedan")
     private int year;
@@ -37,13 +38,8 @@ public class Car {
     public double getPrice() {
         return price;
     }
-    public Car(String name) {
-        this.name = name;
-    }
 
     public void setName(String name) {
         this.name = name;
     }
 }
-
-

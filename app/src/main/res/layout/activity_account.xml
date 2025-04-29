@@ -5,8 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#FFFFFF"
-    android:padding="24dp">
+    android:padding="0dp">
 
+    <!-- Іконка профілю -->
     <ImageView
         android:id="@+id/icon_profile"
         android:layout_width="48dp"
@@ -17,8 +18,6 @@
         android:contentDescription="Профіль"
         android:clickable="true"
         android:focusable="true" />
-
-
 
     <!-- Основний контент -->
     <ScrollView
@@ -53,7 +52,6 @@
                 android:background="@drawable/edittext_background"
                 android:layout_marginBottom="16dp" />
 
-
             <EditText
                 android:id="@+id/input_password"
                 android:layout_width="match_parent"
@@ -77,6 +75,7 @@
         </LinearLayout>
     </ScrollView>
 
+    <!-- Нижня панель з кнопками -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -90,7 +89,6 @@
             android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center">
-
 
             <ImageView
                 android:id="@+id/button_search"

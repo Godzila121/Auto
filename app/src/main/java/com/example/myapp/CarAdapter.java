@@ -1,53 +1,55 @@
 package com.example.myapp;
-import android.annotation.SuppressLint;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.ImageView;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import androidx.cardview.widget.CardView;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.ArrayList;
 import java.util.List;
+
 public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
     private Context context;
     private List<Car> carList;
-    private List<Car> favoriteList = new ArrayList<>(); // Список вподобаних
+    private List<Car> favoriteList;
 
-    // Конструктор адаптера
-    public CarAdapter(Context context, List<Car> carList) {
+    public CarAdapter(Context context, List<Car> carList, List<Car> favoriteList) {
         this.context = context;
         this.carList = carList;
+        this.favoriteList = favoriteList;
     }
 
+    @NonNull
     @Override
-    public CarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Створення елемента для кожної картки
+    public CarViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_car, parent, false);
         return new CarViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(CarViewHolder holder, int position) {
-        // Прив'язка даних з моделі до відповідного елементу
+    public void onBindViewHolder(@NonNull CarViewHolder holder, int position) {
         Car car = carList.get(position);
-        holder.nameTextView.setText(car.getName());
+        holder.carName.setText(car.getName());
 
-        // Налаштовуємо поведінку кнопки сердечка
+        // Ставимо правильну іконку залежно від того, чи в улюблених
+        if (favoriteList.contains(car)) {
+            holder.heartButton.setImageResource(R.drawable.heart_button);
+        } else {
+            holder.heartButton.setImageResource(R.drawable.ic_favorite);
+        }
+
         holder.heartButton.setOnClickListener(v -> {
-            if (!favoriteList.contains(car)) {
-                favoriteList.add(car);
-                holder.heartButton.setImageResource(R.drawable.heart_button); // Змінити іконку на заповнене сердечко
-            } else {
+            if (favoriteList.contains(car)) {
                 favoriteList.remove(car);
-                holder.heartButton.setImageResource(R.drawable.heart_button); // Повернути порожнє сердечко
+                holder.heartButton.setImageResource(R.drawable.ic_favorite);
+            } else {
+                favoriteList.add(car);
+                holder.heartButton.setImageResource(R.drawable.heart_button);
             }
-            notifyItemChanged(position); // Оновити елемент
         });
     }
 
@@ -56,23 +58,15 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         return carList.size();
     }
 
-    // Метод для отримання списку вподобаних машин
-    public List<Car> getFavoriteList() {
-        return favoriteList;
-    }
-
-    public static class CarViewHolder extends RecyclerView.ViewHolder {
-
-        TextView nameTextView;
-        ImageView carImageView;
+    static class CarViewHolder extends RecyclerView.ViewHolder {
+        ImageView carImage;
+        TextView carName;
         ImageButton heartButton;
 
-        @SuppressLint("WrongViewCast")
-        public CarViewHolder(View itemView) {
+        public CarViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Ініціалізація елементів UI
-            nameTextView = itemView.findViewById(R.id.car_name);
-            carImageView = itemView.findViewById(R.id.car_image);
+            carImage = itemView.findViewById(R.id.car_image);
+            carName = itemView.findViewById(R.id.car_name);
             heartButton = itemView.findViewById(R.id.heart_button);
         }
     }
