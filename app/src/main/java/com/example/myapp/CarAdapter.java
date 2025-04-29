@@ -9,47 +9,52 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
     private Context context;
     private List<Car> carList;
-    private List<Car> favoriteList;
+    private List<Car> favoriteCars;  // Список для улюблених машин
 
-    public CarAdapter(Context context, List<Car> carList, List<Car> favoriteList) {
+    public CarAdapter(Context context, List<Car> carList, List<Car> favoriteCars) {
         this.context = context;
         this.carList = carList;
-        this.favoriteList = favoriteList;
+        this.favoriteCars = favoriteCars;
     }
 
-    @NonNull
     @Override
-    public CarViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public CarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_car, parent, false);
         return new CarViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CarViewHolder holder, int position) {
+    public void onBindViewHolder(CarViewHolder holder, int position) {
         Car car = carList.get(position);
         holder.carName.setText(car.getName());
 
-        // Ставимо правильну іконку залежно від того, чи в улюблених
-        if (favoriteList.contains(car)) {
-            holder.heartButton.setImageResource(R.drawable.heart_button);
+        // Перевірка, чи є машина в улюблених
+        if (favoriteCars.contains(car)) {
+            holder.heartButton.setImageResource(R.drawable.heart_button);  // Заповнене сердечко
         } else {
-            holder.heartButton.setImageResource(R.drawable.ic_favorite);
+            holder.heartButton.setImageResource(R.drawable.ic_favorite);  // Порожнє сердечко
         }
 
         holder.heartButton.setOnClickListener(v -> {
-            if (favoriteList.contains(car)) {
-                favoriteList.remove(car);
-                holder.heartButton.setImageResource(R.drawable.ic_favorite);
+            if (!favoriteCars.contains(car)) {
+                favoriteCars.add(car);
+                holder.heartButton.setImageResource(R.drawable.heart_button);  // Заповнене сердечко
             } else {
-                favoriteList.add(car);
-                holder.heartButton.setImageResource(R.drawable.heart_button);
+                favoriteCars.remove(car);
+                holder.heartButton.setImageResource(R.drawable.ic_favorite);  // Порожнє сердечко
             }
+
+            // Зберігаємо зміни у SharedPreferences
+            SharedPreferencesHelper.saveFavorites(context, favoriteCars);
+            notifyItemChanged(position);
         });
     }
 
@@ -58,14 +63,12 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         return carList.size();
     }
 
-    static class CarViewHolder extends RecyclerView.ViewHolder {
-        ImageView carImage;
+    public static class CarViewHolder extends RecyclerView.ViewHolder {
         TextView carName;
         ImageButton heartButton;
 
-        public CarViewHolder(@NonNull View itemView) {
+        public CarViewHolder(View itemView) {
             super(itemView);
-            carImage = itemView.findViewById(R.id.car_image);
             carName = itemView.findViewById(R.id.car_name);
             heartButton = itemView.findViewById(R.id.heart_button);
         }
