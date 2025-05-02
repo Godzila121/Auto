@@ -4,46 +4,98 @@
     android:id="@+id/car_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="6dp"
     android:layout_margin="8dp"
-    android:padding="0dp">
+    android:padding="0dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp">
 
     <LinearLayout
         android:id="@+id/card_inner_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:background="?android:attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:padding="16dp">
 
-        <ImageView
-            android:id="@+id/car_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@drawable/ic_car"
-            android:contentDescription="Car image" />
-
-        <TextView
-            android:id="@+id/car_name"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_weight="1"
-            android:text="Car Name"
-            android:textSize="16sp"
-            android:textColor="#000000" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/heart_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_favorite"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/heart_button"
-        android:padding="4dp" />
+            <ImageView
+                android:id="@+id/car_image"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:contentDescription="Car image"
+                android:src="@drawable/ic_car" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/car_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Car Name"
+                    android:textColor="#000000"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/car_type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Тип: "
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/car_year"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Рік: "
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/car_country"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Країна: "
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/car_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ціна: $"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/customs_duty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Мито: $"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/heart_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/heart_button"
+                android:padding="4dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_favorite" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

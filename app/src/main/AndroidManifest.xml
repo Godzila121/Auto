@@ -26,7 +26,7 @@
         <activity android:name=".SecondActivity" />
         <activity android:name=".FavoriteActivity" />
         <activity android:name=".AccountActivity" />
-
+        <activity android:name=".AddCarActivity" />
     </application>
 
 </manifest>
