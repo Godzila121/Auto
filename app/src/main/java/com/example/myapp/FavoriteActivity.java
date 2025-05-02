@@ -2,11 +2,12 @@ package com.example.myapp;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +31,18 @@ public class FavoriteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorite);
 
+        // Перевірка стану реєстрації
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        boolean isRegistered = prefs.getBoolean("isRegistered", false);
+
+        if (!isRegistered) {
+            // Перенаправлення на екран облікового запису для реєстрації
+            Intent accountIntent = new Intent(FavoriteActivity.this, AccountActivity.class);
+            startActivity(accountIntent);
+            finish(); // Закриваємо FavoriteActivity
+            return;
+        }
+
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
@@ -48,8 +61,7 @@ public class FavoriteActivity extends AppCompatActivity {
         });
 
         buttonAccount.setOnClickListener(v -> {
-            Intent intent = new Intent(FavoriteActivity.this, AccountActivity.class);
-            startActivity(intent);
+            Toast.makeText(this, "Ви вже залогінені", Toast.LENGTH_SHORT).show();
             overridePendingTransition(0, 0);
         });
 

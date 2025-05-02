@@ -1,12 +1,16 @@
 package com.example.myapp;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.NumberFormat;
@@ -49,22 +53,31 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         }
 
         holder.heartButton.setOnClickListener(v -> {
-            if (!favoriteCars.contains(car)) {
-                favoriteCars.add(car);
-                holder.heartButton.setImageResource(R.drawable.heart_button);
+            if (isUserRegistered()) {
+                if (!favoriteCars.contains(car)) {
+                    favoriteCars.add(car);
+                    holder.heartButton.setImageResource(R.drawable.heart_button);
+                } else {
+                    favoriteCars.remove(car);
+                    holder.heartButton.setImageResource(R.drawable.ic_favorite);
+                }
+                SharedPreferencesHelper.saveFavorites(context, favoriteCars);
+                notifyItemChanged(position);
             } else {
-                favoriteCars.remove(car);
-                holder.heartButton.setImageResource(R.drawable.ic_favorite);
+                Toast.makeText(context, "Будь ласка, зареєструйтесь, щоб додавати автомобілі до улюбленого", Toast.LENGTH_SHORT).show();
+                context.startActivity(new Intent(context, AccountActivity.class)); // Перенаправлення на екран акаунта
             }
-
-            SharedPreferencesHelper.saveFavorites(context, favoriteCars);
-            notifyItemChanged(position);
         });
     }
 
     @Override
     public int getItemCount() {
         return carList.size();
+    }
+
+    private boolean isUserRegistered() {
+        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        return prefs.getBoolean("isRegistered", false);
     }
 
     public static class CarViewHolder extends RecyclerView.ViewHolder {

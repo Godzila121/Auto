@@ -2,6 +2,7 @@ package com.example.myapp;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -25,7 +26,7 @@ public class SecondActivity extends AppCompatActivity {
     private ImageView buttonProfile;
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
-    private List<Car> carList; // Не ініціалізуємо тут, завантажимо з SharedPreferences
+    private List<Car> carList;
     private List<Car> favoriteCars;
     private FloatingActionButton fabAddCar;
 
@@ -37,7 +38,7 @@ public class SecondActivity extends AppCompatActivity {
                     if (newCar != null) {
                         carList.add(newCar);
                         carAdapter.notifyItemInserted(carList.size() - 1);
-                        SharedPreferencesHelper.saveCarList(this, carList); // Зберігаємо оновлений список
+                        SharedPreferencesHelper.saveCarList(this, carList);
                     }
                 }
             }
@@ -56,7 +57,6 @@ public class SecondActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         fabAddCar = findViewById(R.id.fab_add_car);
 
-        // Завантажуємо збережений список автомобілів
         carList = SharedPreferencesHelper.getCarList(this);
         if (carList == null) {
             carList = new ArrayList<>();
@@ -97,8 +97,18 @@ public class SecondActivity extends AppCompatActivity {
         });
 
         fabAddCar.setOnClickListener(v -> {
-            Intent intent = new Intent(SecondActivity.this, AddCarActivity.class);
-            addCarLauncher.launch(intent);
+            if (isUserRegistered()) {
+                Intent intent = new Intent(SecondActivity.this, AddCarActivity.class);
+                addCarLauncher.launch(intent);
+            } else {
+                Toast.makeText(SecondActivity.this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(SecondActivity.this, AccountActivity.class)); // Перенаправлення на екран акаунта
+            }
         });
+    }
+
+    private boolean isUserRegistered() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return prefs.getBoolean("isRegistered", false);
     }
 }
