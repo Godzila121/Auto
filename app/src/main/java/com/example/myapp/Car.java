@@ -62,14 +62,28 @@ public class Car implements Serializable {
     }
 
     private double calculateCustomsDuty() {
-        double dutyRate;
-        if (age <= 3) {
-            dutyRate = 0.10; // 10% для нових авто
-        } else if (age > 3 && age <= 7) {
-            dutyRate = 0.15; // 15% для авто середнього віку
-        } else {
-            dutyRate = 0.20; // 20% для старих авто
+        double dutyRate = 0.0;
+
+        if (age <= 3) { // Нові автомобілі
+            if (engineCapacity <= 1500) {
+                dutyRate = 0.10; // 10%
+            } else {
+                dutyRate = 0.12; // 12% <---- Ось ставка для об'єму понад 1500
+            }
+        } else if (age > 3 && age <= 7) { // Автомобілі середнього віку
+            if (engineCapacity <= 1500) {
+                dutyRate = 0.15; // 15%
+            } else {
+                dutyRate = 0.18; // 18% <---- Ось ставка для об'єму понад 1500
+            }
+        } else { // Старі автомобілі (понад 7 років)
+            if (engineCapacity <= 1500) {
+                dutyRate = 0.20; // 20%
+            } else {
+                dutyRate = 0.25; // 25% <---- Ось ставка для об'єму понад 1500
+            }
         }
+
         return price * dutyRate;
     }
 
