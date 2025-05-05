@@ -1,107 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#FFFFFF">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Додати новий автомобіль"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
-
-    <com.google.android.material.textfield.TextInputLayout
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Назва автомобіля">
+        android:background="#F5F5F5">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_car_name"
+            android:hint="Назва авто"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
+            android:layout_height="60dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="text" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:text="Тип авто"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Тип автомобіля">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/input_car_type"
+        <Spinner
+            android:id="@+id/spinner_car_type"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp"
+            android:background="@drawable/rounded_background"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Рік випуску">
-
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_car_year"
+            android:hint="Рік випуску"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Країна виробник">
-
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_car_country"
+            android:hint="Країна виробник"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Ціна (USD)">
-
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_car_price"
+            android:hint="Ціна (USD)"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:inputType="numberDecimal"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Об'єм двигуна (см³)">
-
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_engine_capacity"
+            android:hint="Обʼєм двигуна (см³)"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Вік автомобіля (років)">
-
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/input_car_age"
+            android:hint="Вік авто (років)"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:padding="12dp"
+            android:background="@drawable/rounded_background"
+            android:layout_marginBottom="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="60dp" />
 
-    <Button
-        android:id="@+id/button_add_new_car"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Додати автомобіль"
-        android:layout_marginTop="24dp" />
+        <Button
+            android:id="@+id/button_add_new_car"
+            android:text="Додати авто"
+            android:textSize="18sp"
+            android:background="#FF9800"
+            android:textColor="#FFFFFF"
+            android:padding="14dp"
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>
