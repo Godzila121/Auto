@@ -4,13 +4,20 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +32,18 @@ public class FavoriteActivity extends AppCompatActivity {
     private ImageView buttonAccount;
     private ImageView buttonProfile;
 
+    private FirebaseDatabase database;
+    private DatabaseReference favoritesRef;
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorite);
+
+        // Ініціалізація Firebase
+        database = FirebaseDatabase.getInstance();
+        favoritesRef = database.getReference("favorites");
 
         // Перевірка стану реєстрації
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
@@ -60,33 +74,49 @@ public class FavoriteActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-        buttonAccount.setOnClickListener(v -> {
+        buttonProfile.setOnClickListener(v -> {
             Toast.makeText(this, "Ви вже залогінені", Toast.LENGTH_SHORT).show();
             overridePendingTransition(0, 0);
         });
 
-        buttonProfile.setOnClickListener(v -> {
+        buttonAccount.setOnClickListener(v -> {
             Intent intent = new Intent(FavoriteActivity.this, AccountActivity.class);
             startActivity(intent);
             overridePendingTransition(0, 0);
         });
 
-        favoriteCars = SharedPreferencesHelper.getFavorites(this);
-
-        if (favoriteCars == null) {
-            favoriteCars = new ArrayList<>();
-        }
-
-        if (!favoriteCars.isEmpty()) {
-            NoFavorites.setVisibility(View.GONE);
-        } else {
-            NoFavorites.setVisibility(View.VISIBLE);
-        }
+        // Завантажуємо улюблені автомобілі з Firebase
+        loadFavoritesFromFirebase();
 
         recyclerView = findViewById(R.id.recycler_view_favorites);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         carAdapter = new CarAdapter(this, favoriteCars, favoriteCars);
         recyclerView.setAdapter(carAdapter);
+    }
+
+    private void loadFavoritesFromFirebase() {
+        favoritesRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                favoriteCars.clear(); // Очищаємо список перед завантаженням нових даних
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Car car = snapshot.getValue(Car.class);
+                    if (car != null) {
+                        favoriteCars.add(car);
+                    }
+                }
+
+                // Оновлюємо адаптер, щоб відобразити нові дані
+                carAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Показуємо помилку при завантаженні даних
+                Toast.makeText(FavoriteActivity.this, "Failed to load data.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

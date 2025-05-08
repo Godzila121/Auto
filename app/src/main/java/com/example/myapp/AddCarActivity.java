@@ -10,16 +10,26 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class AddCarActivity extends AppCompatActivity {
 
     private EditText inputCarName, inputCarYear, inputCarCountry, inputCarPrice, inputEngineCapacity, inputCarAge;
     private Spinner spinnerCarType;
     private Button buttonAddNewCar;
 
+    // Firebase Database reference
+    private DatabaseReference carsRef;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_car);
+
+        // Ініціалізація Firebase
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        carsRef = database.getReference("cars"); // це посилання на колекцію "cars"
 
         inputCarName = findViewById(R.id.input_car_name);
         spinnerCarType = findViewById(R.id.spinner_car_type);
@@ -41,7 +51,7 @@ public class AddCarActivity extends AppCompatActivity {
 
         buttonAddNewCar.setOnClickListener(v -> {
             String name = inputCarName.getText().toString().trim();
-            String type = spinnerCarType.getSelectedItem().toString(); // <-- тут замість EditText
+            String type = spinnerCarType.getSelectedItem().toString();
             String yearStr = inputCarYear.getText().toString().trim();
             String country = inputCarCountry.getText().toString().trim();
             String priceStr = inputCarPrice.getText().toString().trim();
@@ -62,10 +72,22 @@ public class AddCarActivity extends AppCompatActivity {
 
                 Car newCar = new Car(name, type, year, country, price, engineCapacity, age);
 
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("new_car", newCar);
-                setResult(RESULT_OK, resultIntent);
-                finish();
+                // Додаємо новий автомобіль до Firebase Database
+                String carId = carsRef.push().getKey(); // автоматичний ID для нового автомобіля
+                if (carId != null) {
+                    carsRef.child(carId).setValue(newCar) // додаємо об'єкт Car в Firebase
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(AddCarActivity.this, "Автомобіль додано успішно", Toast.LENGTH_SHORT).show();
+                                Intent resultIntent = new Intent();
+                                resultIntent.putExtra("new_car", newCar);
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(AddCarActivity.this, "Помилка при додаванні автомобіля", Toast.LENGTH_SHORT).show();
+                            });
+                }
+
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Невірний формат року, ціни, об'єму двигуна або віку", Toast.LENGTH_SHORT).show();
             }

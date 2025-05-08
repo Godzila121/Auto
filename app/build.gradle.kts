@@ -1,5 +1,7 @@
+// build.gradle (Module)
 plugins {
     alias(libs.plugins.android.application)
+    id ("com.google.gms.google-services")
 }
 
 android {
@@ -35,12 +37,15 @@ android {
 }
 
 dependencies {
-    implementation ("com.google.code.gson:gson:2.8.8")
+    implementation(libs.firebase.database) // для Firebase Database
+    implementation(libs.firebase.auth) // для Firebase Authentication
+    implementation ("com.google.code.gson:gson:2.8.8") // якщо вам потрібен Gson для роботи з JSON
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

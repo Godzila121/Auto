@@ -12,6 +12,7 @@ public class Car implements Serializable {
     private int age;
     private double customsDuty;
 
+    // Конструктор з параметрами
     public Car(String name, String type, int year, String country, double price, int engineCapacity, int age) {
         this.name = name;
         this.type = type;
@@ -23,8 +24,12 @@ public class Car implements Serializable {
         this.customsDuty = calculateCustomsDuty();
     }
 
-    // Геттери та сеттери (без змін)
+    // Порожній конструктор для Firebase
+    public Car() {
+        // Порожній конструктор
+    }
 
+    // Геттери та сеттери
     public String getName() {
         return name;
     }
@@ -61,26 +66,41 @@ public class Car implements Serializable {
         this.name = name;
     }
 
+    public void setPrice(double price) {
+        this.price = price;
+        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни ціни
+    }
+
+    public void setEngineCapacity(int engineCapacity) {
+        this.engineCapacity = engineCapacity;
+        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни об'єму двигуна
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни віку
+    }
+
     private double calculateCustomsDuty() {
         double dutyRate = 0.0;
 
-        if (age <= 3) { // Нові автомобілі
+        if (age <= 3) {
             if (engineCapacity <= 1500) {
-                dutyRate = 0.10; // 10%
+                dutyRate = 0.10;
             } else {
-                dutyRate = 0.12; // 12% <---- Ось ставка для об'єму понад 1500
+                dutyRate = 0.12;
             }
-        } else if (age > 3 && age <= 7) { // Автомобілі середнього віку
+        } else if (age > 3 && age <= 7) {
             if (engineCapacity <= 1500) {
-                dutyRate = 0.15; // 15%
+                dutyRate = 0.15;
             } else {
-                dutyRate = 0.18; // 18% <---- Ось ставка для об'єму понад 1500
+                dutyRate = 0.18;
             }
-        } else { // Старі автомобілі (понад 7 років)
+        } else {
             if (engineCapacity <= 1500) {
-                dutyRate = 0.20; // 20%
+                dutyRate = 0.20;
             } else {
-                dutyRate = 0.25; // 25% <---- Ось ставка для об'єму понад 1500
+                dutyRate = 0.25;
             }
         }
 
@@ -91,3 +111,4 @@ public class Car implements Serializable {
         this.customsDuty = customsDuty;
     }
 }
+

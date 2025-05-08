@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,8 +27,8 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
     public CarAdapter(Context context, List<Car> carList, List<Car> favoriteCars) {
         this.context = context;
-        this.carList = carList;
-        this.favoriteCars = favoriteCars;
+        this.carList = (carList != null) ? carList : new ArrayList<>();
+        this.favoriteCars = (favoriteCars != null) ? favoriteCars : new ArrayList<>();
     }
 
     @Override
@@ -41,7 +42,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         Car car = carList.get(position);
         holder.carName.setText(car.getName());
         holder.carType.setText("Тип: " + car.getType());
-        holder.carYear.setText("Рік: " + String.valueOf(car.getYear()));
+        holder.carYear.setText("Рік: " + car.getYear());
         holder.carCountry.setText("Країна: " + car.getCountry());
         holder.carPrice.setText("Ціна: " + currencyFormat.format(car.getPrice()));
         holder.customsDuty.setText("Мито: " + currencyFormat.format(car.getCustomsDuty()));
@@ -65,14 +66,14 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 notifyItemChanged(position);
             } else {
                 Toast.makeText(context, "Будь ласка, зареєструйтесь, щоб додавати автомобілі до улюбленого", Toast.LENGTH_SHORT).show();
-                context.startActivity(new Intent(context, AccountActivity.class)); // Перенаправлення на екран акаунта
+                context.startActivity(new Intent(context, AccountActivity.class));
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return carList.size();
+        return (carList != null) ? carList.size() : 0;
     }
 
     private boolean isUserRegistered() {
