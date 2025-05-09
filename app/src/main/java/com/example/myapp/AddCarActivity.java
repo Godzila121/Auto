@@ -2,11 +2,13 @@ package com.example.myapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -73,14 +75,14 @@ public class AddCarActivity extends AppCompatActivity {
                 Car newCar = new Car(name, type, year, country, price, engineCapacity, age);
 
                 // Додаємо новий автомобіль до Firebase Database
-                String carId = carsRef.push().getKey(); // автоматичний ID для нового автомобіля
+                String carId = carsRef.push().getKey();
+                Log.d("AddCarActivity", "Generated car ID: " + carId);
                 if (carId != null) {
-                    carsRef.child(carId).setValue(newCar) // додаємо об'єкт Car в Firebase
+                    carsRef.child(carId).setValue(newCar)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(AddCarActivity.this, "Автомобіль додано успішно", Toast.LENGTH_SHORT).show();
-                                Intent resultIntent = new Intent();
-                                resultIntent.putExtra("new_car", newCar);
-                                setResult(RESULT_OK, resultIntent);
+                                Intent intent = new Intent(AddCarActivity.this, SecondActivity.class);
+                                startActivity(intent);
                                 finish();
                             })
                             .addOnFailureListener(e -> {

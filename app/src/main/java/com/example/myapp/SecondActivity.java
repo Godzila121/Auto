@@ -41,46 +41,39 @@ public class SecondActivity extends AppCompatActivity {
     private FirebaseDatabase mDatabase;
     private DatabaseReference mDatabaseRef;
 
-    private final ActivityResultLauncher<Intent> addCarLauncher = registerForActivityResult(
+    ActivityResultLauncher<Intent> launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Car newCar = (Car) result.getData().getSerializableExtra("new_car");
                     if (newCar != null) {
-                        carList.add(newCar);
-                        carAdapter.notifyItemInserted(carList.size() - 1);
-                        SharedPreferencesHelper.saveCarList(this, carList);
-                        addCarToFirebase(newCar); // Додаємо новий автомобіль у Firebase
+                        carList.add(newCar); // додаємо у список
+                        carAdapter.notifyItemInserted(carList.size() - 1); // повідомляємо адаптер
+                        addCarToFirebase(newCar); // необов'язково — якщо хочете одразу в Firebase
                     }
                 }
             }
     );
 
-    @SuppressLint("MissingInflatedId")
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
 
-        SharedPreferencesHelper.getCarList(this, new SharedPreferencesHelper.OnCarListLoadedListener() {
-            @Override
-            public void onCarListLoaded(List<Car> cars) {
-                if (cars != null) {
-                    carList = cars;
-                    carAdapter = new CarAdapter(SecondActivity.this, carList,favoriteCars);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(SecondActivity.this));
-                    recyclerView.setAdapter(carAdapter);
-                } else {
-                    Toast.makeText(SecondActivity.this, "Не вдалося завантажити автомобілі", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        // 🔹 Ініціалізація списків
+        carList = new ArrayList<>();
+        favoriteCars = new ArrayList<>();
 
-        // Ініціалізація Firebase
+        // 🔹 Ініціалізація Firebase
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         mDatabaseRef = mDatabase.getReference("cars");
 
+        // 🔹 Прив’язка елементів інтерфейсу
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
@@ -88,63 +81,65 @@ public class SecondActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         fabAddCar = findViewById(R.id.fab_add_car);
 
-
+        // 🔹 Отримуємо список улюблених авто, якщо є
         Intent incomingIntent = getIntent();
-        favoriteCars = (List<Car>) incomingIntent.getSerializableExtra("favorite_cars");
-        if (favoriteCars == null) {
-            favoriteCars = new ArrayList<>();
+        List<Car> incomingFavorites = (List<Car>) incomingIntent.getSerializableExtra("favorite_cars");
+        if (incomingFavorites != null) {
+            favoriteCars.addAll(incomingFavorites);
         }
 
+        // 🔹 Ініціалізація адаптера
         carAdapter = new CarAdapter(this, carList, favoriteCars);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(carAdapter);
 
-        buttonSearch.setOnClickListener(v -> {
-            Toast.makeText(SecondActivity.this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show();
-            overridePendingTransition(0, 0);
-        });
+        // 🔹 Завантажуємо авто з Firebase при запуску
+        loadCarsFromFirebase();
 
-        SharedPreferencesHelper.getCarList(this, new SharedPreferencesHelper.OnCarListLoadedListener() {
-            @Override
-            public void onCarListLoaded(List<Car> loadedCarList) {
-                if (loadedCarList != null) {
-                    carList.clear();
-                    carList.addAll(loadedCarList);
-                    carAdapter.notifyDataSetChanged();
-                }
-            }
-        });
-
+        // 🔹 Кнопки
+        buttonSearch.setOnClickListener(v ->
+                Toast.makeText(this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show()
+        );
 
         buttonFavorite.setOnClickListener(v -> {
-            Intent favoriteIntent = new Intent(SecondActivity.this, FavoriteActivity.class);
+            Intent favoriteIntent = new Intent(this, FavoriteActivity.class);
             favoriteIntent.putExtra("favorite_cars", new ArrayList<>(favoriteCars));
             startActivity(favoriteIntent);
             overridePendingTransition(0, 0);
         });
 
         buttonAccount.setOnClickListener(v -> {
-            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
-            startActivity(accountIntent);
+            startActivity(new Intent(this, AccountActivity.class));
             overridePendingTransition(0, 0);
         });
 
         buttonProfile.setOnClickListener(v -> {
-            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
-            startActivity(accountIntent);
-            overridePendingTransition(0, 0);
+            startActivity(new Intent(this, AccountActivity.class));
         });
 
         fabAddCar.setOnClickListener(v -> {
             if (isUserRegistered()) {
-                Intent intent = new Intent(SecondActivity.this, AddCarActivity.class);
-                addCarLauncher.launch(intent);
+                Intent intent = new Intent(this, AddCarActivity.class);
+                launcher.launch(intent);
+
             } else {
-                Toast.makeText(SecondActivity.this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(SecondActivity.this, AccountActivity.class)); // Перенаправлення на екран акаунта
+                Toast.makeText(this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, AccountActivity.class));
             }
         });
+        fabAddCar.setOnClickListener(v -> {
+            if (isUserRegistered()) {
+                Intent intent = new Intent(this, AddCarActivity.class);
+                launcher.launch(intent); // використовуйте правильний launcher
+            } else {
+                Toast.makeText(this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, AccountActivity.class));
+            }
+        });
+
     }
+
+
 
     private boolean isUserRegistered() {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
@@ -166,6 +161,7 @@ public class SecondActivity extends AppCompatActivity {
                         });
             }
         }
+        loadCarsFromFirebase();
     }
 
     // Завантаження автомобілів з Firebase

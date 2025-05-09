@@ -85,8 +85,9 @@ public class FavoriteActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-        // Завантажуємо улюблені автомобілі з Firebase
-        loadFavoritesFromFirebase();
+
+        loadFavoritesFromFirestore();
+
 
         recyclerView = findViewById(R.id.recycler_view_favorites);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -95,28 +96,14 @@ public class FavoriteActivity extends AppCompatActivity {
         recyclerView.setAdapter(carAdapter);
     }
 
-    private void loadFavoritesFromFirebase() {
-        favoritesRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                favoriteCars.clear(); // Очищаємо список перед завантаженням нових даних
-
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Car car = snapshot.getValue(Car.class);
-                    if (car != null) {
-                        favoriteCars.add(car);
-                    }
-                }
-
-                // Оновлюємо адаптер, щоб відобразити нові дані
-                carAdapter.notifyDataSetChanged();
+    private void loadFavoritesFromFirestore() {
+        SharedPreferencesHelper.getFavorites(this, carList -> {
+            favoriteCars.clear();
+            if (carList != null) {
+                favoriteCars.addAll(carList);
             }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Показуємо помилку при завантаженні даних
-                Toast.makeText(FavoriteActivity.this, "Failed to load data.", Toast.LENGTH_SHORT).show();
-            }
+            carAdapter.notifyDataSetChanged();
         });
     }
+
 }

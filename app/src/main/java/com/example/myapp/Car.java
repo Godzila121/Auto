@@ -65,6 +65,18 @@ public class Car implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Car car = (Car) o;
+        return name.equals(car.name); // або інше унікальне поле
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode(); // або те саме унікальне поле
+    }
 
     public void setPrice(double price) {
         this.price = price;
@@ -111,4 +123,3 @@ public class Car implements Serializable {
         this.customsDuty = customsDuty;
     }
 }
-
