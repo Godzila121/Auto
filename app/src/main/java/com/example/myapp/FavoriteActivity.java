@@ -17,6 +17,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ public class FavoriteActivity extends AppCompatActivity {
 
     private FirebaseDatabase database;
     private DatabaseReference favoritesRef;
+    private FirebaseAuth mAuth;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -41,16 +44,16 @@ public class FavoriteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorite);
 
-        // Ініціалізація Firebase
+        // Ініціалізація Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+
+        // Ініціалізація Firebase Realtime Database (використовується?)
         database = FirebaseDatabase.getInstance();
-        favoritesRef = database.getReference("favorites");
+        favoritesRef = database.getReference("favorites"); // Увага: ви завантажуєте улюблені з Firestore
 
-        // Перевірка стану реєстрації
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        boolean isRegistered = prefs.getBoolean("isRegistered", false);
-
-        if (!isRegistered) {
-            // Перенаправлення на екран облікового запису для реєстрації
+        // Перевірка стану входу
+        if (!SharedPreferencesHelper.getLoginStatus(this)) {
+            // Користувач не увійшов, перенаправлення на екран облікового запису
             Intent accountIntent = new Intent(FavoriteActivity.this, AccountActivity.class);
             startActivity(accountIntent);
             finish(); // Закриваємо FavoriteActivity
@@ -75,7 +78,16 @@ public class FavoriteActivity extends AppCompatActivity {
         });
 
         buttonProfile.setOnClickListener(v -> {
-            Toast.makeText(this, "Ви вже залогінені", Toast.LENGTH_SHORT).show();
+            // Перевірка, чи користувач увійшов через Firebase Auth
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                Toast.makeText(this, "Ви залогінені як: " + currentUser.getEmail(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Будь ласка, увійдіть", Toast.LENGTH_SHORT).show();
+                Intent accountIntent = new Intent(FavoriteActivity.this, AccountActivity.class);
+                startActivity(accountIntent);
+                finish();
+            }
             overridePendingTransition(0, 0);
         });
 
@@ -85,9 +97,7 @@ public class FavoriteActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-
         loadFavoritesFromFirestore();
-
 
         recyclerView = findViewById(R.id.recycler_view_favorites);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -105,5 +115,4 @@ public class FavoriteActivity extends AppCompatActivity {
             carAdapter.notifyDataSetChanged();
         });
     }
-
 }

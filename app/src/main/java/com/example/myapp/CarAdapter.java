@@ -57,7 +57,8 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         }
 
         holder.heartButton.setOnClickListener(v -> {
-            if (isUserRegistered()) {
+            // Перевірка стану входу замість стану реєстрації
+            if (SharedPreferencesHelper.getLoginStatus(context)) {
                 if (!favoriteCars.contains(car)) {
                     favoriteCars.add(car);
                     holder.heartButton.setImageResource(R.drawable.heart_button);
@@ -68,7 +69,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 SharedPreferencesHelper.saveFavorites(context, favoriteCars);
                 notifyItemChanged(position);
             } else {
-                Toast.makeText(context, "Будь ласка, зареєструйтесь, щоб додавати автомобілі до улюбленого", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Будь ласка, увійдіть, щоб додавати автомобілі до улюбленого", Toast.LENGTH_SHORT).show();
                 context.startActivity(new Intent(context, AccountActivity.class));
             }
         });
@@ -79,9 +80,9 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         return (carList != null) ? carList.size() : 0;
     }
 
-    private boolean isUserRegistered() {
-        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        return prefs.getBoolean("isRegistered", false);
+    // Використовуйте метод SharedPreferencesHelper для перевірки стану входу
+    private boolean isLoggedIn() {
+        return SharedPreferencesHelper.getLoginStatus(context);
     }
 
     public static class CarViewHolder extends RecyclerView.ViewHolder {

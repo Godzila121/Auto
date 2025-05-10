@@ -55,10 +55,6 @@ public class SecondActivity extends AppCompatActivity {
             }
     );
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +84,15 @@ public class SecondActivity extends AppCompatActivity {
             favoriteCars.addAll(incomingFavorites);
         }
 
+        // ➡️ Перевірка стану входу при створенні Activity
+        if (!SharedPreferencesHelper.getLoginStatus(this)) {
+            // Користувач не увійшов, перенаправлення на екран облікового запису
+            Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
+            startActivity(accountIntent);
+            finish(); // Закриваємо SecondActivity
+            return;
+        }
+
         // 🔹 Ініціалізація адаптера
         carAdapter = new CarAdapter(this, carList, favoriteCars);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -114,32 +119,28 @@ public class SecondActivity extends AppCompatActivity {
         });
 
         buttonProfile.setOnClickListener(v -> {
-            startActivity(new Intent(this, AccountActivity.class));
+            // Перевірка, чи користувач увійшов через Firebase Auth
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                Toast.makeText(this, "Ви залогінені як: " + currentUser.getEmail(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Будь ласка, увійдіть", Toast.LENGTH_SHORT).show();
+                Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
+                startActivity(accountIntent);
+                finish();
+            }
         });
 
         fabAddCar.setOnClickListener(v -> {
-            if (isUserRegistered()) {
+            if (SharedPreferencesHelper.getLoginStatus(this)) { // Перевірка стану входу
                 Intent intent = new Intent(this, AddCarActivity.class);
                 launcher.launch(intent);
-
             } else {
-                Toast.makeText(this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Будь ласка, увійдіть, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, AccountActivity.class));
             }
         });
-        fabAddCar.setOnClickListener(v -> {
-            if (isUserRegistered()) {
-                Intent intent = new Intent(this, AddCarActivity.class);
-                launcher.launch(intent); // використовуйте правильний launcher
-            } else {
-                Toast.makeText(this, "Будь ласка, зареєструйтесь, щоб додавати автомобілі", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, AccountActivity.class));
-            }
-        });
-
     }
-
-
 
     private boolean isUserRegistered() {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
