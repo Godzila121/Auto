@@ -1,6 +1,7 @@
 package com.example.myapp;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Car implements Serializable {
     private String id;
@@ -9,14 +10,16 @@ public class Car implements Serializable {
     private int year;
     private String country;
     private double price;
-    private int engineCapacity;
+    private double engineCapacity;
     private int age;
     private double customsDuty;
+    private double totalPrice;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    // Конструктор з параметрами
-    public Car(String name, String type, int year, String country, double price, int engineCapacity, int age) {
+    public Car() {
+        // Порожній конструктор для Firebase
+    }
+
+    public Car(String name, String type, int year, String country, double price, double engineCapacity, int age) {
         this.name = name;
         this.type = type;
         this.year = year;
@@ -24,105 +27,77 @@ public class Car implements Serializable {
         this.price = price;
         this.engineCapacity = engineCapacity;
         this.age = age;
-        this.customsDuty = calculateCustomsDuty();
+        recalculate();
     }
 
-    // Порожній конструктор для Firebase
-    public Car() {
-        // Порожній конструктор
-    }
+    // Геттери
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getType() { return type; }
+    public int getYear() { return year; }
+    public String getCountry() { return country; }
+    public double getPrice() { return price; }
+    public double getEngineCapacity() { return engineCapacity; }
+    public int getAge() { return age; }
+    public double getCustomsDuty() { return customsDuty; }
+    public double getTotalPrice() { return totalPrice; }
 
-    // Геттери та сеттери
-    public String getName() {
-        return name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public int getEngineCapacity() {
-        return engineCapacity;
-    }
-
-    public int getAge() {
-        return age;
-    }
-
-    public double getCustomsDuty() {
-        return customsDuty;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Car car = (Car) o;
-        return name.equals(car.name); // або інше унікальне поле
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode(); // або те саме унікальне поле
-    }
+    // Сеттери
+    public void setId(String id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setType(String type) { this.type = type; }
+    public void setYear(int year) { this.year = year; }
+    public void setCountry(String country) { this.country = country; }
 
     public void setPrice(double price) {
         this.price = price;
-        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни ціни
+        recalculate();
     }
 
-    public void setEngineCapacity(int engineCapacity) {
+    public void setEngineCapacity(double engineCapacity) {
         this.engineCapacity = engineCapacity;
-        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни об'єму двигуна
+        recalculate();
     }
 
     public void setAge(int age) {
         this.age = age;
-        this.customsDuty = calculateCustomsDuty(); // Перерахувати митний збір після зміни віку
+        recalculate();
     }
 
+    // Метод для оновлення мита та загальної ціни
+    private void recalculate() {
+        this.customsDuty = calculateCustomsDuty();
+        this.totalPrice = this.price + this.customsDuty;
+    }
+
+    // Обчислення мита
     private double calculateCustomsDuty() {
-        double dutyRate = 0.0;
+        double dutyRate;
 
         if (age <= 3) {
-            if (engineCapacity <= 1500) {
-                dutyRate = 0.10;
-            } else {
-                dutyRate = 0.12;
-            }
-        } else if (age > 3 && age <= 7) {
-            if (engineCapacity <= 1500) {
-                dutyRate = 0.15;
-            } else {
-                dutyRate = 0.18;
-            }
+            dutyRate = (engineCapacity <= 1.5) ? 0.10 : 0.12;
+        } else if (age <= 7) {
+            dutyRate = (engineCapacity <= 1.5) ? 0.15 : 0.18;
         } else {
-            if (engineCapacity <= 1500) {
-                dutyRate = 0.20;
-            } else {
-                dutyRate = 0.25;
-            }
+            dutyRate = (engineCapacity <= 1.5) ? 0.20 : 0.25;
         }
 
         return price * dutyRate;
     }
 
-    public void setCustomsDuty(double customsDuty) {
-        this.customsDuty = customsDuty;
+    // equals/hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Car)) return false;
+        Car car = (Car) o;
+        return year == car.year &&
+                Objects.equals(name, car.name) &&
+                Objects.equals(country, car.country);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, year, country);
     }
 }

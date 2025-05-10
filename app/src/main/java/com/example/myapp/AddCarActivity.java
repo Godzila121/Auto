@@ -1,5 +1,6 @@
 package com.example.myapp;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,7 +24,10 @@ public class AddCarActivity extends AppCompatActivity {
 
     // Firebase Database reference
     private DatabaseReference carsRef;
+    private EditText inputTotalPrice;
 
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +43,9 @@ public class AddCarActivity extends AppCompatActivity {
         inputCarCountry = findViewById(R.id.input_car_country);
         inputCarPrice = findViewById(R.id.input_car_price);
         inputEngineCapacity = findViewById(R.id.input_engine_capacity);
-        inputCarAge = findViewById(R.id.input_car_age);
         buttonAddNewCar = findViewById(R.id.button_add_new_car);
+        inputTotalPrice = findViewById(R.id.input_total_price);
+
 
         // Ініціалізація спінера
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -93,6 +98,10 @@ public class AddCarActivity extends AppCompatActivity {
                 }
 
                 int carAge = 2025 - year;
+                double customsTax = price * 0.12;
+                double totalPrice = price + customsTax;
+
+                inputTotalPrice.setText(String.format("%.2f", totalPrice));
 
                 Car newCar = new Car(name, type, year, country, price, (int) engineCapacity, carAge);
 
@@ -113,6 +122,7 @@ public class AddCarActivity extends AppCompatActivity {
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Невірний формат числових полів", Toast.LENGTH_SHORT).show();
             }
+
         });
 
     }

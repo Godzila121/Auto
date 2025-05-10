@@ -84,18 +84,6 @@
             android:layout_width="match_parent"
             android:layout_height="60dp" />
 
-        <EditText
-            android:id="@+id/input_car_age"
-            android:hint="Вік авто (років)"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            android:inputType="number"
-            android:padding="12dp"
-            android:background="@drawable/rounded_background"
-            android:layout_marginBottom="16dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp" />
-
         <Button
             android:id="@+id/button_add_new_car"
             android:text="Додати авто"

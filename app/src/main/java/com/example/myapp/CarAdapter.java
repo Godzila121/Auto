@@ -47,6 +47,9 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         holder.carPrice.setText("Ціна: " + currencyFormat.format(car.getPrice()));
         holder.customsDuty.setText("Мито: " + currencyFormat.format(car.getCustomsDuty()));
 
+        double totalPrice = car.getPrice() + car.getCustomsDuty();
+        holder.totalPrice.setText("Загальна ціна: " + currencyFormat.format(totalPrice));
+
         if (favoriteCars.contains(car)) {
             holder.heartButton.setImageResource(R.drawable.heart_button);
         } else {
@@ -89,6 +92,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         TextView carCountry;
         TextView carPrice;
         TextView customsDuty;
+        TextView totalPrice;
         ImageButton heartButton;
 
         public CarViewHolder(View itemView) {
@@ -100,6 +104,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
             carCountry = itemView.findViewById(R.id.car_country);
             carPrice = itemView.findViewById(R.id.car_price);
             customsDuty = itemView.findViewById(R.id.customs_duty);
+            totalPrice = itemView.findViewById(R.id.input_total_price); // додано поле
             heartButton = itemView.findViewById(R.id.heart_button);
         }
     }
