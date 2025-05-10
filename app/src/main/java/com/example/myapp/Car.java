@@ -3,6 +3,7 @@ package com.example.myapp;
 import java.io.Serializable;
 
 public class Car implements Serializable {
+    private String id;
     private String name;
     private String type;
     private int year;
@@ -12,6 +13,8 @@ public class Car implements Serializable {
     private int age;
     private double customsDuty;
 
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     // Конструктор з параметрами
     public Car(String name, String type, int year, String country, double price, int engineCapacity, int age) {
         this.name = name;

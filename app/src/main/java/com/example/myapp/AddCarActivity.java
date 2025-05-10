@@ -58,25 +58,45 @@ public class AddCarActivity extends AppCompatActivity {
             String country = inputCarCountry.getText().toString().trim();
             String priceStr = inputCarPrice.getText().toString().trim();
             String engineCapacityStr = inputEngineCapacity.getText().toString().trim();
-            String ageStr = inputCarAge.getText().toString().trim();
 
             if (name.isEmpty() || yearStr.isEmpty() || country.isEmpty()
-                    || priceStr.isEmpty() || engineCapacityStr.isEmpty() || ageStr.isEmpty()) {
+                    || priceStr.isEmpty() || engineCapacityStr.isEmpty()) {
                 Toast.makeText(this, "Будь ласка, заповніть всі поля", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Перевірка: назва машини — тільки літери
+            if (!name.matches("[a-zA-Zа-яА-ЯіІїЇєЄґҐ\\s]+")) {
+                Toast.makeText(this, "Назва має містити лише літери", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Перевірка: країна — тільки літери
+            if (!country.matches("[a-zA-Zа-яА-ЯіІїЇєЄґҐ\\s]+")) {
+                Toast.makeText(this, "Країна має містити лише літери", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             try {
                 int year = Integer.parseInt(yearStr);
+                if (year > 2025 || year < 1886 || yearStr.length() != 4) {
+                    Toast.makeText(this, "Рік має бути 4 цифри і не більше 2025 і не менше 1886", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 double price = Double.parseDouble(priceStr);
-                int engineCapacity = Integer.parseInt(engineCapacityStr);
-                int age = Integer.parseInt(ageStr);
 
-                Car newCar = new Car(name, type, year, country, price, engineCapacity, age);
+                double engineCapacity = Double.parseDouble(engineCapacityStr);
+                if (engineCapacity < 1.1 || engineCapacity > 13.4) {
+                    Toast.makeText(this, "Обʼєм двигуна має бути від 1.1 до 13.4", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                // Додаємо новий автомобіль до Firebase Database
+                int carAge = 2025 - year;
+
+                Car newCar = new Car(name, type, year, country, price, (int) engineCapacity, carAge);
+
                 String carId = carsRef.push().getKey();
-                Log.d("AddCarActivity", "Generated car ID: " + carId);
                 if (carId != null) {
                     carsRef.child(carId).setValue(newCar)
                             .addOnSuccessListener(aVoid -> {
@@ -85,14 +105,15 @@ public class AddCarActivity extends AppCompatActivity {
                                 startActivity(intent);
                                 finish();
                             })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(AddCarActivity.this, "Помилка при додаванні автомобіля", Toast.LENGTH_SHORT).show();
-                            });
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(AddCarActivity.this, "Помилка при додаванні автомобіля", Toast.LENGTH_SHORT).show()
+                            );
                 }
 
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "Невірний формат року, ціни, об'єму двигуна або віку", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Невірний формат числових полів", Toast.LENGTH_SHORT).show();
             }
         });
+
     }
 }

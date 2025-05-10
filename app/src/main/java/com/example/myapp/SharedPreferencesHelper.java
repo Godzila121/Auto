@@ -44,42 +44,47 @@ public class SharedPreferencesHelper {
     }
 
 
-
-
     public static void saveFavorites(Context context, List<Car> favoriteCars) {
         db.collection(FAVORITES_COLLECTION)
                 .get()
-                .addOnSuccessListener(query -> {
-                    // Видаляємо попередні улюблені авто, щоб не дублювати
-                    for (var doc : query.getDocuments()) {
+                .addOnSuccessListener(querySnapshot -> {
+                    // Видаляємо старі документи
+                    for (var doc : querySnapshot.getDocuments()) {
                         doc.getReference().delete();
                     }
 
-                    // Додаємо нові улюблені авто
+                    // Додаємо нові улюблені машини
                     for (Car car : favoriteCars) {
                         db.collection(FAVORITES_COLLECTION)
                                 .add(car)
                                 .addOnSuccessListener(documentReference -> {
-                                    // Можна не показувати тост кожного разу
+                                    // Ви можете показати повідомлення один раз, якщо потрібно
                                 })
                                 .addOnFailureListener(e -> {
-                                    Toast.makeText(context, "Помилка при збереженні улюблених", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "Помилка при збереженні вподобань", Toast.LENGTH_SHORT).show();
                                 });
                     }
+
+                    Toast.makeText(context, "Улюблені збережено!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(context, "Не вдалося очистити старі вподобання", Toast.LENGTH_SHORT).show();
                 });
     }
+
     public static void getFavorites(Context context, FirebaseHelper.OnCarListLoadedListener listener) {
         db.collection(FAVORITES_COLLECTION)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Car> favoriteCars = queryDocumentSnapshots.toObjects(Car.class);
-                    listener.onCarListLoaded(favoriteCars);
+                    List<Car> carList = queryDocumentSnapshots.toObjects(Car.class);
+                    listener.onCarListLoaded(carList);
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(context, "Помилка при завантаженні улюблених", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Помилка при завантаженні вподобань", Toast.LENGTH_SHORT).show();
                     listener.onCarListLoaded(null);
                 });
     }
+
 
 
 }
