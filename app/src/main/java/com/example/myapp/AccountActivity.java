@@ -30,20 +30,19 @@ import java.util.List;
 
 public class AccountActivity extends AppCompatActivity {
 
-    private ImageView buttonSearch, buttonFavorite, buttonAccountNav, iconProfile; // buttonAccount перейменовано на buttonAccountNav
+    private ImageView buttonSearch, buttonFavorite, buttonAccountNav, iconProfile;
     private Button buttonRegister, buttonLogout, buttonLogin;
     private EditText inputEmail, inputPassword;
     private TextView textWelcome;
 
-    // Нові поля для списку автомобілів користувача
     private RecyclerView recyclerViewMyCars;
     private CarAdapter myCarsAdapter;
     private List<Car> myCarList;
-    private List<String> myAccountFavoriteCarIds; // Для CarAdapter на цій сторінці
+    private List<String> myAccountFavoriteCarIds;
     private TextView textMyCarsTitle;
     private TextView textNoMyCars;
 
-    private DatabaseReference allCarsRef; // Посилання на загальний вузол "cars" в RTDB
+    private DatabaseReference allCarsRef;
     private Query userCarsQuery;
     private ValueEventListener userCarsValueEventListener;
 
@@ -57,7 +56,6 @@ public class AccountActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        // Ініціалізація існуючих View
         iconProfile = findViewById(R.id.icon_profile);
         inputEmail = findViewById(R.id.input_email);
         inputPassword = findViewById(R.id.input_password);
@@ -68,9 +66,8 @@ public class AccountActivity extends AppCompatActivity {
 
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
-        buttonAccountNav = findViewById(R.id.button_account); // Використовуємо ID для кнопки навігації
+        buttonAccountNav = findViewById(R.id.button_account);
 
-        // Ініціалізація нових View та RecyclerView
         textMyCarsTitle = findViewById(R.id.text_my_cars_title);
         recyclerViewMyCars = findViewById(R.id.recycler_view_my_cars);
         textNoMyCars = findViewById(R.id.text_no_my_cars);
@@ -79,19 +76,20 @@ public class AccountActivity extends AppCompatActivity {
         myAccountFavoriteCarIds = new ArrayList<>();
 
         recyclerViewMyCars.setLayoutManager(new LinearLayoutManager(this));
-        myCarsAdapter = new CarAdapter(this, myCarList, myAccountFavoriteCarIds);
+        // === ПОЧАТОК: Змінено ініціалізацію адаптера ===
+        myCarsAdapter = new CarAdapter(this, myCarList, myAccountFavoriteCarIds, true); // Передаємо true для allowDeletion
+        // === КІНЕЦЬ: Змінено ініціалізацію адаптера ===
         recyclerViewMyCars.setAdapter(myCarsAdapter);
 
         allCarsRef = FirebaseDatabase.getInstance().getReference("cars");
 
         setupAuthListener();
 
-        // Обробники кнопок
         buttonRegister.setOnClickListener(v -> registerUser());
         buttonLogin.setOnClickListener(v -> loginUser());
         buttonLogout.setOnClickListener(v -> {
-            detachUserCarsListener(); // Від'єднуємо слухача перед виходом
-            mAuth.signOut(); // AuthStateListener обробить оновлення UI
+            detachUserCarsListener();
+            mAuth.signOut();
         });
 
         iconProfile.setOnClickListener(v -> showProfileToast());
@@ -115,14 +113,13 @@ public class AccountActivity extends AppCompatActivity {
                 Log.d("AccountActivity", "AuthState: Користувач увійшов - " + user.getEmail());
                 SharedPreferencesHelper.saveLoginStatus(this, true);
                 if (user.getEmail() != null) {
-                    // Зберігаємо email через SharedPreferencesHelper, якщо потрібно
                     SharedPreferencesHelper.saveUserEmail(this, user.getEmail());
                 }
                 updateUIForLoggedInUser(user);
             } else {
                 Log.d("AccountActivity", "AuthState: Користувач вийшов.");
                 SharedPreferencesHelper.saveLoginStatus(this, false);
-                SharedPreferencesHelper.clearUserEmail(this); // Або SharedPreferencesHelper.clearUserSessionData(this);
+                SharedPreferencesHelper.clearUserEmail(this);
                 updateUIForLoggedOutUser();
             }
         };
@@ -141,7 +138,7 @@ public class AccountActivity extends AppCompatActivity {
 
         textMyCarsTitle.setVisibility(View.VISIBLE);
         loadUserCars(user.getUid());
-        loadMyFavoriteCarIdsForAdapter();
+        loadMyFavoriteCarIdsForAdapter(); // Змінено: UID більше не передається сюди
     }
 
     private void updateUIForLoggedOutUser() {
@@ -154,7 +151,7 @@ public class AccountActivity extends AppCompatActivity {
 
         textWelcome.setVisibility(View.GONE);
         buttonLogout.setVisibility(View.GONE);
-        iconProfile.setVisibility(View.GONE); // Або інша логіка
+        iconProfile.setVisibility(View.GONE);
 
         textMyCarsTitle.setVisibility(View.GONE);
         recyclerViewMyCars.setVisibility(View.GONE);
@@ -164,7 +161,6 @@ public class AccountActivity extends AppCompatActivity {
         myAccountFavoriteCarIds.clear();
         if (myCarsAdapter != null) {
             myCarsAdapter.notifyDataSetChanged();
-            // Також оновлюємо список улюблених в адаптері, оскільки він міг змінитися
             myCarsAdapter.updateFavoriteCarIds(myAccountFavoriteCarIds);
         }
         detachUserCarsListener();
@@ -181,9 +177,7 @@ public class AccountActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(this, "Реєстрація успішна!", Toast.LENGTH_SHORT).show();
-                        // НЕ ЗБЕРІГАЙТЕ ПАРОЛЬ В SHARED PREFERENCES
-                        // SharedPreferencesHelper.saveUserRegistrationInfo(this, email); // Зберігає email та статус
-                        // AuthStateListener оновить UI
+                        // SharedPreferencesHelper.saveUserRegistrationInfo(this, email); // Замість старого saveUserCredentials
                     } else {
                         Toast.makeText(this, "Помилка реєстрації: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
@@ -199,12 +193,10 @@ public class AccountActivity extends AppCompatActivity {
         }
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        // AuthStateListener оновить UI
-                        // SharedPreferencesHelper.saveUserEmail(this, email); // Якщо потрібно для SharedPreferencesHelper
-                    } else {
+                    if (!task.isSuccessful()) {
                         Toast.makeText(this, "Помилка входу: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
+                    // AuthStateListener оновить UI в будь-якому випадку після завершення цього завдання
                 });
     }
 
@@ -263,11 +255,8 @@ public class AccountActivity extends AppCompatActivity {
         userCarsQuery.addValueEventListener(userCarsValueEventListener);
     }
 
-    // У файлі AccountActivity.java
-
-    // Змініть сигнатуру методу, якщо currentUserId більше не потрібен тут
-    private void loadMyFavoriteCarIdsForAdapter() { // Видалено параметр currentUserId, якщо він був лише для цього виклику
-        FirebaseUser currentUser = mAuth.getCurrentUser(); // Отримуємо поточного користувача
+    private void loadMyFavoriteCarIdsForAdapter() { // Видалено параметр currentUserId
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             Log.w("AccountActivity", "Користувач не залогінений, неможливо завантажити ID улюблених.");
             this.myAccountFavoriteCarIds.clear();
@@ -276,16 +265,13 @@ public class AccountActivity extends AppCompatActivity {
             }
             return;
         }
-
-        // ВИПРАВЛЕНИЙ ВИКЛИК: передаємо ТІЛЬКИ слухача
+        // FirebaseHelper.getFavoriteCarIds не приймає UID, він отримує його всередині
         FirebaseHelper.getFavoriteCarIds((List<String> receivedFavoriteIds) -> {
             Log.d("AccountActivity", "Завантажено ID улюблених (" + (receivedFavoriteIds != null ? receivedFavoriteIds.size() : "0") + ") для адаптера профілю.");
-
             this.myAccountFavoriteCarIds.clear();
             if (receivedFavoriteIds != null) {
                 this.myAccountFavoriteCarIds.addAll(receivedFavoriteIds);
             }
-
             if (myCarsAdapter != null) {
                 myCarsAdapter.updateFavoriteCarIds(this.myAccountFavoriteCarIds);
             } else {
@@ -306,11 +292,9 @@ public class AccountActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (mAuthListener != null) { // Перевіряємо чи слухач ініціалізований
+        if (mAuthListener != null) {
             mAuth.addAuthStateListener(mAuthListener);
         }
-        // Якщо користувач вже увійшов, AuthStateListener викличе updateUIForLoggedInUser,
-        // який завантажить автомобілі. Якщо ні, то нічого не завантажуємо.
     }
 
     @Override
@@ -321,7 +305,4 @@ public class AccountActivity extends AppCompatActivity {
         }
         detachUserCarsListener();
     }
-
-    // Видаліть старі методи, якщо їх функціонал перенесено:
-    // saveLoginState, getUserEmail, getUserPassword, logout, hideForm, showForm, showWelcome, logoutUI
 }

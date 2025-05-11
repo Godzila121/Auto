@@ -11,6 +11,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+// === ПОЧАТОК: Додано імпорт для AlertDialog ===
+import androidx.appcompat.app.AlertDialog;
+// === КІНЕЦЬ: Додано імпорт для AlertDialog ===
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,14 +28,24 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
     private Context context;
     private List<Car> carList;
-    private List<String> favoriteCarIds; // Зберігаємо ID улюблених автомобілів
+    private List<String> favoriteCarIds;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+    private boolean allowDeletion; // <-- НОВЕ ПОЛЕ: Прапорець для дозволу видалення
 
-    public CarAdapter(Context context, List<Car> carList, List<String> favoriteCarIds) {
+    // Оновлений конструктор для прийняття прапорця allowDeletion
+    public CarAdapter(Context context, List<Car> carList, List<String> favoriteCarIds, boolean allowDeletion) {
         this.context = context;
         this.carList = (carList != null) ? carList : new ArrayList<>();
         this.favoriteCarIds = (favoriteCarIds != null) ? favoriteCarIds : new ArrayList<>();
+        this.allowDeletion = allowDeletion; // Зберігаємо прапорець
     }
+
+    // Старий конструктор (якщо ви його використовуєте в інших місцях, він буде викликати новий)
+    // Або ви можете оновити всі місця виклику, щоб передавати allowDeletion
+    public CarAdapter(Context context, List<Car> carList, List<String> favoriteCarIds) {
+        this(context, carList, favoriteCarIds, false); // За замовчуванням видалення вимкнено
+    }
+
 
     @Override
     public CarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -43,8 +56,16 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
     @Override
     public void onBindViewHolder(CarViewHolder holder, int position) {
         Car car = carList.get(position);
-        Log.d("CarAdapter", "onBindViewHolder called for position: " + position + ", Car: " + car);
-        holder.bind(car);
+        // Використовуємо Log.d з перевіркою на null для car та car.getId()
+        Log.d("CarAdapter", "onBindViewHolder for position: " + position +
+                ", Car: " + (car != null ? car.getName() : "null car") +
+                ", ID: " + (car != null && car.getId() != null ? car.getId() : "null id"));
+        if (car != null) {
+            holder.bind(car);
+        } else {
+            Log.e("CarAdapter", "Car object at position " + position + " is null.");
+            // Можна очистити ViewHolder або показати стан помилки
+        }
     }
 
     @Override
@@ -52,10 +73,23 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         return (carList != null) ? carList.size() : 0;
     }
 
-    public void updateFavoriteCarIds(List<String> favoriteCarIds) {
-        this.favoriteCarIds = favoriteCarIds;
+    public void updateFavoriteCarIds(List<String> newFavoriteCarIds) { // Змінено ім'я параметра для уникнення плутанини
+        this.favoriteCarIds.clear();
+        if (newFavoriteCarIds != null) {
+            this.favoriteCarIds.addAll(newFavoriteCarIds);
+        }
         notifyDataSetChanged();
     }
+
+    // Додамо метод для оновлення списку автомобілів, якщо потрібно
+    public void updateCarList(List<Car> newCars) {
+        this.carList.clear();
+        if (newCars != null) {
+            this.carList.addAll(newCars);
+        }
+        notifyDataSetChanged();
+    }
+
 
     public class CarViewHolder extends RecyclerView.ViewHolder {
         ImageView carImage;
@@ -65,8 +99,9 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         TextView carCountry;
         TextView carPrice;
         TextView customsDuty;
-        TextView totalPrice;
+        TextView totalPriceTextView; // Перейменовано для ясності, що це TextView
         ImageButton heartButton;
+        ImageButton deleteCarButton; // <-- НОВЕ ПОЛЕ для кнопки видалення
         Car currentCar;
 
         public CarViewHolder(View itemView) {
@@ -78,62 +113,105 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
             carCountry = itemView.findViewById(R.id.car_country);
             carPrice = itemView.findViewById(R.id.car_price);
             customsDuty = itemView.findViewById(R.id.customs_duty);
-            totalPrice = itemView.findViewById(R.id.input_total_price);
+            totalPriceTextView = itemView.findViewById(R.id.input_total_price); // ID з вашого item_car.xml для загальної ціни
             heartButton = itemView.findViewById(R.id.heart_button);
+            deleteCarButton = itemView.findViewById(R.id.button_delete_car); // <-- ІНІЦІАЛІЗАЦІЯ кнопки видалення
 
             heartButton.setOnClickListener(v -> {
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 if (currentUser != null) {
-                    Log.d("CarAdapter", "Heart button clicked. currentCar: " + currentCar);
-                    if (currentCar != null) {
+                    if (currentCar != null && currentCar.getId() != null) {
                         String carId = currentCar.getId();
-                        Log.d("CarAdapter", "Clicked car ID: " + carId);
-                        if (carId != null) {
-                            if (favoriteCarIds.contains(carId)) {
-                                FirebaseHelper.removeFavorite(context, carId);
-                                favoriteCarIds.remove(carId);
-                                heartButton.setImageResource(R.drawable.ic_favorite);
-                            } else {
-                                FirebaseHelper.addFavorite(context, carId);
-                                favoriteCarIds.add(carId);
-                                heartButton.setImageResource(R.drawable.heart_button);
-                            }
+                        Log.d("CarAdapter", "Heart clicked for car ID: " + carId);
+                        if (favoriteCarIds.contains(carId)) {
+                            FirebaseHelper.removeFavorite(context, carId); // З Firestore
+                            favoriteCarIds.remove(carId);
+                            heartButton.setImageResource(R.drawable.ic_favorite); // Порожнє
                         } else {
-                            Log.e("CarAdapter", "Clicked car ID is null!");
+                            FirebaseHelper.addFavorite(context, carId); // В Firestore
+                            favoriteCarIds.add(carId);
+                            heartButton.setImageResource(R.drawable.heart_button); // Заповнене
                         }
                     } else {
-                        Log.e("CarAdapter", "currentCar is null when heart button clicked!");
+                        Log.e("CarAdapter", "Heart clicked: currentCar or carId is null!");
                     }
                 } else {
-                    Toast.makeText(context, "Будь ласка, увійдіть, щоб додавати автомобілі до улюбленого", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Будь ласка, увійдіть, щоб керувати улюбленими", Toast.LENGTH_SHORT).show();
                     context.startActivity(new Intent(context, AccountActivity.class));
                 }
             });
+
+            // === ПОЧАТОК: Обробник для кнопки "видалити" ===
+            deleteCarButton.setOnClickListener(v -> {
+                if (currentCar == null || currentCar.getId() == null) {
+                    Log.e("CarAdapter", "Delete clicked: currentCar or carId is null");
+                    Toast.makeText(context, "Помилка: Неможливо отримати дані автомобіля.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                // Додаткова перевірка, чи поточний користувач є власником
+                // (хоча видимість кнопки вже мала б це врахувати, якщо allowDeletion true)
+                if (currentUser != null && currentCar.getUserId() != null && currentCar.getUserId().equals(currentUser.getUid())) {
+                    new AlertDialog.Builder(context)
+                            .setTitle("Підтвердження видалення")
+                            .setMessage("Ви впевнені, що хочете видалити автомобіль \"" + currentCar.getName() + "\"?\nЦю дію неможливо буде скасувати.")
+                            .setPositiveButton("Так, видалити", (dialog, which) -> {
+                                Log.d("CarAdapter", "Видалення автомобіля з ID: " + currentCar.getId());
+                                // Викликаємо метод для видалення з Realtime Database (буде створено в FirebaseHelper)
+                                FirebaseHelper.deleteCarFromRealtimeDatabase(context, currentCar.getId());
+                            })
+                            .setNegativeButton("Ні", null)
+                            .setIcon(android.R.drawable.ic_dialog_alert) // Стандартна іконка попередження
+                            .show();
+                } else {
+                    // Цей блок не мав би спрацювати, якщо кнопка видима лише для власника
+                    Log.w("CarAdapter", "Спроба видалення не власником або користувач не залогінений.");
+                    Toast.makeText(context, "Ви не можете видалити цей автомобіль.", Toast.LENGTH_SHORT).show();
+                }
+            });
+            // === КІНЕЦЬ: Обробник для кнопки "видалити" ===
         }
 
         public void bind(Car car) {
-            Log.d("CarAdapter", "bind called with Car: " + car);
             currentCar = car;
-            if (currentCar != null) {
-                Log.d("CarAdapter", "Binding car with ID: " + currentCar.getId() + ", Name: " + currentCar.getName());
-            } else {
-                Log.e("CarAdapter", "Attempting to bind a null Car object!");
-            }
+            Log.d("CarAdapter", "Binding car: " + (car.getName() != null ? car.getName() : "N/A") +
+                    ", ID: " + (car.getId() != null ? car.getId() : "N/A") +
+                    ", UserID: " + (car.getUserId() != null ? car.getUserId() : "N/A"));
+
+
             carName.setText(car.getName());
             carType.setText("Тип: " + car.getType());
-            carYear.setText("Рік: " + car.getYear());
+            carYear.setText("Рік: " + car.getYear()); // car.getYear() повертає int, setText очікує CharSequence
             carCountry.setText("Країна: " + car.getCountry());
             carPrice.setText("Ціна: " + currencyFormat.format(car.getPrice()));
             customsDuty.setText("Мито: " + currencyFormat.format(car.getCustomsDuty()));
 
-            double totalPriceValue = car.getPrice() + car.getCustomsDuty();
-            totalPrice.setText("Загальна ціна: " + currencyFormat.format(totalPriceValue));
-
-            if (favoriteCarIds.contains(car.getId())) {
-                heartButton.setImageResource(R.drawable.heart_button);
-            } else {
-                heartButton.setImageResource(R.drawable.ic_favorite);
+            // Використовуємо car.getTotalPrice(), який розраховується всередині об'єкта Car
+            if (totalPriceTextView != null) {
+                totalPriceTextView.setText(currencyFormat.format(car.getTotalPrice()));
             }
+
+            // Встановлення стану кнопки "сердечко"
+            if (favoriteCarIds != null && car.getId() != null && favoriteCarIds.contains(car.getId())) {
+                heartButton.setImageResource(R.drawable.heart_button); // Заповнене
+            } else {
+                heartButton.setImageResource(R.drawable.ic_favorite); // Порожнє
+            }
+
+            // === ПОЧАТОК: Логіка видимості кнопки видалення ===
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            // Кнопка видалення видима, якщо:
+            // 1. `allowDeletion` для цього адаптера встановлено в true (тобто ми в контексті, де видалення дозволено, наприклад, AccountActivity)
+            // 2. Користувач залогінений
+            // 3. Автомобіль має userId
+            // 4. userId автомобіля збігається з UID поточного користувача
+            if (allowDeletion && currentUser != null && car.getUserId() != null && car.getUserId().equals(currentUser.getUid())) {
+                deleteCarButton.setVisibility(View.VISIBLE);
+            } else {
+                deleteCarButton.setVisibility(View.GONE);
+            }
+            // === КІНЕЦЬ: Логіка видимості кнопки видалення ===
         }
     }
 }
