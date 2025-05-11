@@ -3,16 +3,20 @@ package com.example.myapp;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log; // Один імпорт Log достатньо
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView; // Потрібен імпорт для TextView
+import android.widget.TextView;
 import android.widget.Toast;
-// import android.util.Log; // Дублюючий імпорт Log
 
 import androidx.appcompat.app.AppCompatActivity;
+
+// === ПОЧАТОК: Додано імпорти для FirebaseAuth ===
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+// === КІНЕЦЬ: Додано імпорти для FirebaseAuth ===
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -20,19 +24,25 @@ import com.google.firebase.database.FirebaseDatabase;
 public class AddCarActivity extends AppCompatActivity {
 
     private EditText inputCarName, inputCarYear, inputCarCountry, inputCarPrice, inputEngineCapacity;
-    // private EditText inputCarAge; // Видалено, якщо немає відповідного поля в XML
     private Spinner spinnerCarType;
     private Button buttonAddNewCar;
 
     private DatabaseReference carsRef;
-    // private EditText inputTotalPrice; // ВИДАЛЕНО - це було джерелом проблеми, якщо ID не існував у layout AddCarActivity
-    private TextView displayAddCarTotalPrice; // Використовуємо це для відображення загальної ціни
+    private TextView displayAddCarTotalPrice;
 
-    @SuppressLint("MissingInflatedId") // Залиште, якщо впевнені, що всі ID існують в activity_add_car.xml
+    // === ПОЧАТОК: Додано поле для FirebaseAuth ===
+    private FirebaseAuth mAuth;
+    // === КІНЕЦЬ: Додано поле для FirebaseAuth ===
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_car); // Переконайтеся, що це правильний файл розмітки
+        setContentView(R.layout.activity_add_car);
+
+        // === ПОЧАТОК: Ініціалізація FirebaseAuth ===
+        mAuth = FirebaseAuth.getInstance();
+        // === КІНЕЦЬ: Ініціалізація FirebaseAuth ===
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         carsRef = database.getReference("cars");
@@ -44,17 +54,11 @@ public class AddCarActivity extends AppCompatActivity {
         inputCarPrice = findViewById(R.id.input_car_price);
         inputEngineCapacity = findViewById(R.id.input_engine_capacity);
         buttonAddNewCar = findViewById(R.id.button_add_new_car);
-
-        // Ініціалізуємо TextView для загальної ціни ТУТ, в onCreate
-        // ПРИПУСКАЄМО, ЩО ВИ ДОДАЛИ TextView з android:id="@+id/display_add_car_total_price"
-        // У ВАШ ФАЙЛ РОЗМІТКИ activity_add_car.xml
         displayAddCarTotalPrice = findViewById(R.id.display_add_car_total_price);
+
         if (displayAddCarTotalPrice == null) {
             Log.e("AddCarActivity", "УВАГА: TextView з ID 'display_add_car_total_price' не знайдено у activity_add_car.xml!");
-            // Можна навіть кинути виняток або показати Toast, щоб розробник помітив
-            // Toast.makeText(this, "Помилка розмітки: display_add_car_total_price не знайдено", Toast.LENGTH_LONG).show();
         }
-
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -65,7 +69,6 @@ public class AddCarActivity extends AppCompatActivity {
         spinnerCarType.setAdapter(adapter);
 
         buttonAddNewCar.setOnClickListener(v -> {
-            // ... (ваш код для отримання значень з полів вводу та валідації залишається тут) ...
             String name = inputCarName.getText().toString().trim();
             String type = spinnerCarType.getSelectedItem().toString();
             String yearStr = inputCarYear.getText().toString().trim();
@@ -94,40 +97,49 @@ public class AddCarActivity extends AppCompatActivity {
                     return;
                 }
                 double price = Double.parseDouble(priceStr);
-                double engineCapacity = Double.parseDouble(engineCapacityStr); // Залишаємо double
+                double engineCapacity = Double.parseDouble(engineCapacityStr);
                 if (engineCapacity < 1.1 || engineCapacity > 13.4) {
                     Toast.makeText(this, "Обʼєм двигуна має бути від 1.1 до 13.4", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                int carAge = 2025 - year; // Припускаємо, що поточний рік для розрахунку 2025
-                double customsTax = price * 0.12; // Спрощений розрахунок мита
+                int carAge = 2025 - year;
+                double customsTax = price * 0.12;
                 double totalPrice = price + customsTax;
 
-                // ВИДАЛЕНО: inputTotalPrice.setText(String.format("%.2f", totalPrice));
-                // Тому що inputTotalPrice, ймовірно, був null.
-
-                // Використовуємо displayAddCarTotalPrice, ініціалізований в onCreate
                 if (displayAddCarTotalPrice != null) {
                     displayAddCarTotalPrice.setText(String.format(java.util.Locale.US, "%.2f USD", totalPrice));
                 }
 
-                // ВИПРАВЛЕНО: передаємо engineCapacity як double
                 Car newCar = new Car(name, type, year, country, price, engineCapacity, carAge);
+
+                // === ПОЧАТОК: Встановлення userId для об'єкта Car ===
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+                if (currentUser != null) {
+                    newCar.setUserId(currentUser.getUid());
+                } else {
+                    // Ця ситуація малоймовірна, якщо доступ до AddCarActivity мають лише залогінені користувачі,
+                    // але перевірка не завадить.
+                    Toast.makeText(AddCarActivity.this, "Помилка: користувача не автентифіковано.", Toast.LENGTH_LONG).show();
+                    Log.e("AddCarActivity", "Неможливо встановити userId, користувач не автентифікований.");
+                    return; // Не зберігаємо автомобіль, якщо не можемо встановити власника
+                }
+                // === КІНЕЦЬ: Встановлення userId для об'єкта Car ===
 
                 String carId = carsRef.push().getKey();
                 if (carId != null) {
+                    newCar.setId(carId); // Встановлюємо згенерований ключ як ID самого автомобіля
                     carsRef.child(carId).setValue(newCar)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(AddCarActivity.this, "Автомобіль додано успішно", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(AddCarActivity.this, SecondActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Очистити стек активностей
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(intent);
-                                finish(); // Закрити AddCarActivity
+                                finish();
                             })
                             .addOnFailureListener(e -> {
                                 Toast.makeText(AddCarActivity.this, "Помилка при додаванні автомобіля: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                Log.e("AddCarActivity", "Firebase setValue failed", e); // Додайте логування помилки Firebase
+                                Log.e("AddCarActivity", "Firebase setValue failed", e);
                             });
                 }
 

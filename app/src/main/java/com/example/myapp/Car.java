@@ -1,6 +1,6 @@
 package com.example.myapp;
 
-import android.util.Log; // Додано для логування
+import android.util.Log; // Додано для логування (якщо було видалено)
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -15,6 +15,7 @@ public class Car implements Serializable {
     private int age;
     private double customsDuty;
     private double totalPrice;
+    private String userId; // <--- НОВЕ ПОЛЕ: ID користувача, який додав автомобіль
 
     public Car() {
         // Порожній конструктор для Firebase
@@ -30,6 +31,8 @@ public class Car implements Serializable {
         this.engineCapacity = engineCapacity;
         this.age = age;
         recalculate();
+        // Поле userId не ініціалізується в цьому конструкторі,
+        // воно буде встановлюватися окремо через сеттер перед збереженням.
         Log.d("Car", "Car(...) constructor called with name: " + name);
     }
 
@@ -47,6 +50,7 @@ public class Car implements Serializable {
     public int getAge() { return age; }
     public double getCustomsDuty() { return customsDuty; }
     public double getTotalPrice() { return totalPrice; }
+    public String getUserId() { return userId; } // <--- НОВИЙ ГЕТТЕР для userId
 
     // Сеттери
     public void setId(String id) {
@@ -57,6 +61,7 @@ public class Car implements Serializable {
     public void setType(String type) { this.type = type; }
     public void setYear(int year) { this.year = year; }
     public void setCountry(String country) { this.country = country; }
+    public void setUserId(String userId) { this.userId = userId; } // <--- НОВИЙ СЕТТЕР для userId
 
     public void setPrice(double price) {
         this.price = price;
@@ -107,11 +112,13 @@ public class Car implements Serializable {
                 Objects.equals(id, car.id) &&
                 Objects.equals(name, car.name) &&
                 Objects.equals(type, car.type) &&
-                Objects.equals(country, car.country);
+                Objects.equals(country, car.country) &&
+                Objects.equals(userId, car.userId); // <--- Додано userId до порівняння
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, type, year, country, price, engineCapacity, age);
+        // <--- Додано userId до розрахунку хеш-коду
+        return Objects.hash(id, name, type, year, country, price, engineCapacity, age, userId);
     }
 }
