@@ -1,5 +1,6 @@
 package com.example.myapp;
 
+import android.util.Log; // Додано для логування
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -17,6 +18,7 @@ public class Car implements Serializable {
 
     public Car() {
         // Порожній конструктор для Firebase
+        Log.d("Car", "Car() constructor called");
     }
 
     public Car(String name, String type, int year, String country, double price, double engineCapacity, int age) {
@@ -28,10 +30,14 @@ public class Car implements Serializable {
         this.engineCapacity = engineCapacity;
         this.age = age;
         recalculate();
+        Log.d("Car", "Car(...) constructor called with name: " + name);
     }
 
     // Геттери
-    public String getId() { return id; }
+    public String getId() {
+        Log.d("Car", "getId() called. Returning: " + id);
+        return id;
+    }
     public String getName() { return name; }
     public String getType() { return type; }
     public int getYear() { return year; }
@@ -43,7 +49,10 @@ public class Car implements Serializable {
     public double getTotalPrice() { return totalPrice; }
 
     // Сеттери
-    public void setId(String id) { this.id = id; }
+    public void setId(String id) {
+        Log.d("Car", "setId() called with value: " + id);
+        this.id = id;
+    }
     public void setName(String name) { this.name = name; }
     public void setType(String type) { this.type = type; }
     public void setYear(int year) { this.year = year; }
@@ -92,12 +101,17 @@ public class Car implements Serializable {
         if (!(o instanceof Car)) return false;
         Car car = (Car) o;
         return year == car.year &&
+                Double.compare(car.price, price) == 0 &&
+                Double.compare(car.engineCapacity, engineCapacity) == 0 &&
+                age == car.age &&
+                Objects.equals(id, car.id) &&
                 Objects.equals(name, car.name) &&
+                Objects.equals(type, car.type) &&
                 Objects.equals(country, car.country);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, year, country);
+        return Objects.hash(id, name, type, year, country, price, engineCapacity, age);
     }
 }

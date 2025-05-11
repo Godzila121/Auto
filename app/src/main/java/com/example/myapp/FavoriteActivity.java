@@ -2,8 +2,8 @@ package com.example.myapp;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,11 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -28,14 +23,14 @@ public class FavoriteActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
     private List<Car> favoriteCars = new ArrayList<>();
+    private List<String> favoriteCarIds = new ArrayList<>(); // Для зберігання ID улюблених
 
     private ImageView buttonSearch;
     private ImageView buttonFavorite;
     private ImageView buttonAccount;
     private ImageView buttonProfile;
+    private TextView NoFavorites;
 
-    private FirebaseDatabase database;
-    private DatabaseReference favoritesRef;
     private FirebaseAuth mAuth;
 
     @SuppressLint("MissingInflatedId")
@@ -47,12 +42,9 @@ public class FavoriteActivity extends AppCompatActivity {
         // Ініціалізація Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        // Ініціалізація Firebase Realtime Database (використовується?)
-        database = FirebaseDatabase.getInstance();
-        favoritesRef = database.getReference("favorites"); // Увага: ви завантажуєте улюблені з Firestore
-
         // Перевірка стану входу
-        if (!SharedPreferencesHelper.getLoginStatus(this)) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
             // Користувач не увійшов, перенаправлення на екран облікового запису
             Intent accountIntent = new Intent(FavoriteActivity.this, AccountActivity.class);
             startActivity(accountIntent);
@@ -63,7 +55,7 @@ public class FavoriteActivity extends AppCompatActivity {
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
         buttonAccount = findViewById(R.id.button_account);
-        TextView NoFavorites = findViewById(R.id.NoFavorites);
+        NoFavorites = findViewById(R.id.NoFavorites);
         buttonProfile = findViewById(R.id.button_profile);
 
         buttonSearch.setOnClickListener(v -> {
@@ -78,8 +70,6 @@ public class FavoriteActivity extends AppCompatActivity {
         });
 
         buttonProfile.setOnClickListener(v -> {
-            // Перевірка, чи користувач увійшов через Firebase Auth
-            FirebaseUser currentUser = mAuth.getCurrentUser();
             if (currentUser != null) {
                 Toast.makeText(this, "Ви залогінені як: " + currentUser.getEmail(), Toast.LENGTH_SHORT).show();
             } else {
@@ -97,22 +87,55 @@ public class FavoriteActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-        loadFavoritesFromFirestore();
-
         recyclerView = findViewById(R.id.recycler_view_favorites);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        carAdapter = new CarAdapter(this, favoriteCars, favoriteCars);
+        carAdapter = new CarAdapter(this, favoriteCars, favoriteCarIds); // Передаємо favoriteCarIds
         recyclerView.setAdapter(carAdapter);
+
+        loadFavoriteCarIdsFromFirestore();
     }
 
-    private void loadFavoritesFromFirestore() {
-        SharedPreferencesHelper.getFavorites(this, carList -> {
+    private void loadFavoriteCarIdsFromFirestore() {
+        FirebaseUser currentUser = mAuth.getCurrentUser(); // Вже є в onCreate, але для ясності
+        if (currentUser == null) {
+            Log.e("FavoriteActivity", "Користувач не увійшов, неможливо завантажити ID улюблених.");
+            // Можна додати оновлення UI тут, якщо потрібно
+            if(NoFavorites != null) NoFavorites.setVisibility(TextView.VISIBLE);
             favoriteCars.clear();
-            if (carList != null) {
-                favoriteCars.addAll(carList);
+            favoriteCarIds.clear();
+            if(carAdapter != null) carAdapter.notifyDataSetChanged();
+            return;
+        }
+
+        // Ваш FirebaseHelper.getFavoriteCarIds вже використовує FirebaseAuth.getInstance().getCurrentUser() всередині getUserFavoritesCollection()
+        // тому передавати currentUser.getUid() явно не обов'язково, якщо FirebaseHelper не змінено
+        FirebaseHelper.getFavoriteCarIds(receivedFavoriteIds -> {
+            Log.d("FavoriteActivity", "FirebaseHelper.getFavoriteCarIds - отримано ID: " + receivedFavoriteIds.toString());
+            this.favoriteCarIds.clear();
+            if (receivedFavoriteIds != null) { // Додайте перевірку на null
+                this.favoriteCarIds.addAll(receivedFavoriteIds);
             }
-            carAdapter.notifyDataSetChanged();
+            Log.d("FavoriteActivity", "Список favoriteCarIds в FavoriteActivity: " + this.favoriteCarIds.toString());
+            loadFavoriteCarsFromFirestore();
         });
+    }
+
+    private void loadFavoriteCarsFromFirestore() {
+        if (!favoriteCarIds.isEmpty()) {
+            NoFavorites.setVisibility(TextView.GONE);
+            FirebaseHelper.getCarsByIds(favoriteCarIds, carList -> {
+                favoriteCars.clear();
+                if (carList != null && !carList.isEmpty()) {
+                    favoriteCars.addAll(carList);
+                } else {
+                    NoFavorites.setVisibility(TextView.VISIBLE);
+                }
+                carAdapter.notifyDataSetChanged();
+            });
+        } else {
+            NoFavorites.setVisibility(TextView.VISIBLE);
+            favoriteCars.clear();
+            carAdapter.notifyDataSetChanged();
+        }
     }
 }

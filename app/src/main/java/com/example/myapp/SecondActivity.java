@@ -34,7 +34,7 @@ public class SecondActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
     private List<Car> carList;
-    private List<Car> favoriteCars;
+    private List<String> favoriteCarIds = new ArrayList<>(); // Зберігаємо ID улюблених
     private FloatingActionButton fabAddCar;
 
     private FirebaseAuth mAuth;
@@ -47,9 +47,9 @@ public class SecondActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Car newCar = (Car) result.getData().getSerializableExtra("new_car");
                     if (newCar != null) {
-                        carList.add(newCar); // додаємо у список
-                        carAdapter.notifyItemInserted(carList.size() - 1); // повідомляємо адаптер
-                        addCarToFirebase(newCar); // необов'язково — якщо хочете одразу в Firebase
+                        carList.add(newCar);
+                        carAdapter.notifyItemInserted(carList.size() - 1);
+                        addCarToFirebase(newCar);
                     }
                 }
             }
@@ -62,7 +62,6 @@ public class SecondActivity extends AppCompatActivity {
 
         // 🔹 Ініціалізація списків
         carList = new ArrayList<>();
-        favoriteCars = new ArrayList<>();
 
         // 🔹 Ініціалізація Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -77,26 +76,24 @@ public class SecondActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         fabAddCar = findViewById(R.id.fab_add_car);
 
-        // 🔹 Отримуємо список улюблених авто, якщо є
-        Intent incomingIntent = getIntent();
-        List<Car> incomingFavorites = (List<Car>) incomingIntent.getSerializableExtra("favorite_cars");
-        if (incomingFavorites != null) {
-            favoriteCars.addAll(incomingFavorites);
-        }
-
         // ➡️ Перевірка стану входу при створенні Activity
         if (!SharedPreferencesHelper.getLoginStatus(this)) {
-            // Користувач не увійшов, перенаправлення на екран облікового запису
             Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
             startActivity(accountIntent);
-            finish(); // Закриваємо SecondActivity
+            finish();
             return;
         }
 
-        // 🔹 Ініціалізація адаптера
-        carAdapter = new CarAdapter(this, carList, favoriteCars);
+        // 🔹 Ініціалізація адаптера (передаємо порожній список улюблених на початку)
+        carAdapter = new CarAdapter(this, carList, favoriteCarIds);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(carAdapter);
+
+        // 🔄 Завантажуємо ID улюблених автомобілів
+        SharedPreferencesHelper.getFavoriteCarIds(this, ids -> {
+            this.favoriteCarIds.addAll(ids);
+            carAdapter.updateFavoriteCarIds(this.favoriteCarIds);
+        });
 
         // 🔹 Завантажуємо авто з Firebase при запуску
         loadCarsFromFirebase();
@@ -108,7 +105,6 @@ public class SecondActivity extends AppCompatActivity {
 
         buttonFavorite.setOnClickListener(v -> {
             Intent favoriteIntent = new Intent(this, FavoriteActivity.class);
-            favoriteIntent.putExtra("favorite_cars", new ArrayList<>(favoriteCars));
             startActivity(favoriteIntent);
             overridePendingTransition(0, 0);
         });
@@ -119,7 +115,6 @@ public class SecondActivity extends AppCompatActivity {
         });
 
         buttonProfile.setOnClickListener(v -> {
-            // Перевірка, чи користувач увійшов через Firebase Auth
             FirebaseUser currentUser = mAuth.getCurrentUser();
             if (currentUser != null) {
                 Toast.makeText(this, "Ви залогінені як: " + currentUser.getEmail(), Toast.LENGTH_SHORT).show();
@@ -132,7 +127,7 @@ public class SecondActivity extends AppCompatActivity {
         });
 
         fabAddCar.setOnClickListener(v -> {
-            if (SharedPreferencesHelper.getLoginStatus(this)) { // Перевірка стану входу
+            if (SharedPreferencesHelper.getLoginStatus(this)) {
                 Intent intent = new Intent(this, AddCarActivity.class);
                 launcher.launch(intent);
             } else {
@@ -147,10 +142,10 @@ public class SecondActivity extends AppCompatActivity {
         return prefs.getBoolean("isRegistered", false);
     }
 
-    // Додаємо автомобіль в Firebase
     public void addCarToFirebase(Car car) {
         if (car != null) {
-            String carId = mDatabaseRef.push().getKey(); // Генерація унікального ID для автомобіля
+            String carId = mDatabaseRef.push().getKey();
+            car.setId(carId); // Встановлюємо carId перед збереженням
             if (carId != null) {
                 mDatabaseRef.child(carId).setValue(car)
                         .addOnCompleteListener(task -> {
@@ -165,25 +160,36 @@ public class SecondActivity extends AppCompatActivity {
         loadCarsFromFirebase();
     }
 
-    // Завантаження автомобілів з Firebase
+    // ... ваш існуючий код в SecondActivity.java ...
+
     public void loadCarsFromFirebase() {
         mDatabaseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 carList.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Car car = snapshot.getValue(Car.class); // Преобразуємо дані в об'єкт Car
+                    Car car = snapshot.getValue(Car.class);
                     if (car != null) {
+                        // === ПОЧАТОК ВИПРАВЛЕННЯ ===
+                        String carKey = snapshot.getKey(); // Отримуємо ключ вузла (це і є ваш carId)
+                        car.setId(carKey);                 // Встановлюємо цей ключ як ID об'єкта Car
+                        // === КІНЕЦЬ ВИПРАВЛЕННЯ ===
+
                         carList.add(car);
                     }
                 }
-                carAdapter.notifyDataSetChanged();
+                // Оновлюємо адаптер після завантаження та оновлення всіх ID
+                if (carAdapter != null) { // Додайте перевірку, чи адаптер вже ініціалізовано
+                    carAdapter.notifyDataSetChanged();
+                }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(SecondActivity.this, "Помилка при завантаженні даних", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SecondActivity.this, "Помилка при завантаженні даних: " + databaseError.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
+
+// ... решта вашого коду ...
 }
