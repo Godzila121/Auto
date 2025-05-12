@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log; // Додайте для логування
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -13,7 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.SearchView; // Імпорт для SearchView
+import androidx.appcompat.widget.SearchView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -26,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale; // Для toLowerCase
+import java.util.Locale;
 
 public class SecondActivity extends AppCompatActivity {
 
@@ -36,17 +36,17 @@ public class SecondActivity extends AppCompatActivity {
     private ImageView buttonProfile;
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
-    private List<Car> carList; // Список, який відображається в адаптері (фільтрований)
-    private List<Car> originalCarList; // Повний список автомобілів з Firebase
+    private List<Car> carList;
+    private List<Car> originalCarList;
     private List<String> favoriteCarIds = new ArrayList<>();
     private FloatingActionButton fabAddCar;
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference mDatabaseRef;
-    private ValueEventListener carsValueEventListener; // Зберігаємо посилання на слухача
+    private ValueEventListener carsValueEventListener;
 
-    private SearchView searchViewCars; // Поле для SearchView
+    private SearchView searchViewCars;
 
     ActivityResultLauncher<Intent> launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -54,7 +54,6 @@ public class SecondActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Car newCar = (Car) result.getData().getSerializableExtra("new_car");
                     if (newCar != null) {
-                        // Не додаємо тут до carList напряму, addCarToFirebase оновить дані через слухача
                         addCarToFirebase(newCar);
                     }
                 }
@@ -66,8 +65,8 @@ public class SecondActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
 
-        originalCarList = new ArrayList<>(); // Ініціалізуємо повний список
-        carList = new ArrayList<>();         // Ініціалізуємо список для адаптера
+        originalCarList = new ArrayList<>();
+        carList = new ArrayList<>();
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
@@ -79,30 +78,25 @@ public class SecondActivity extends AppCompatActivity {
         buttonProfile = findViewById(R.id.button_profile);
         recyclerView = findViewById(R.id.recyclerView);
         fabAddCar = findViewById(R.id.fab_add_car);
-        searchViewCars = findViewById(R.id.search_view_cars); // Ініціалізація SearchView
+        searchViewCars = findViewById(R.id.search_view_cars);
 
-        // Перевірка стану входу
-        FirebaseUser currentUser = mAuth.getCurrentUser(); // Використовуємо Firebase Auth як джерело істини
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            // Якщо SharedPreferencesHelper.getLoginStatus(this) це застаріла перевірка,
-            // краще покладатися на currentUser == null
             Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
             startActivity(accountIntent);
             finish();
             return;
         }
 
-        carAdapter = new CarAdapter(this, carList, favoriteCarIds, false, true); // Використовуємо this.carList
+        carAdapter = new CarAdapter(this, carList, favoriteCarIds, false, true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(carAdapter);
 
-        // Завантажуємо ID улюблених (переконайтеся, що це джерело актуальне)
-        // Якщо улюблені також у Firebase, краще завантажувати звідти
         if (mAuth.getCurrentUser() != null) {
-            FirebaseHelper.getFavoriteCarIds(receivedFavoriteIds -> { // Передаємо ТІЛЬКИ слухача
+            FirebaseHelper.getFavoriteCarIds(receivedFavoriteIds -> {
                 this.favoriteCarIds.clear();
-                if (receivedFavoriteIds != null) { // Додайте перевірку на null про всяк випадок
-                    this.favoriteCarIds.addAll(receivedFavoriteIds); // 'receivedFavoriteIds' тепер точно буде List<String>
+                if (receivedFavoriteIds != null) {
+                    this.favoriteCarIds.addAll(receivedFavoriteIds);
                 }
                 if (carAdapter != null) {
                     carAdapter.updateFavoriteCarIds(this.favoriteCarIds);
@@ -113,10 +107,9 @@ public class SecondActivity extends AppCompatActivity {
         }
 
 
-        setupSearchViewListener(); // Налаштування слухача для SearchView
-        loadCarsFromFirebase();    // Завантажуємо автомобілі
+        setupSearchViewListener();
+        loadCarsFromFirebase();
 
-        // Обробники кнопок (залишаються без змін, окрім buttonProfile для консистентності)
         buttonSearch.setOnClickListener(v ->
                 Toast.makeText(this, "Ви вже на цій сторінці", Toast.LENGTH_SHORT).show()
         );
@@ -130,14 +123,13 @@ public class SecondActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
         buttonProfile.setOnClickListener(v -> {
-            FirebaseUser user = mAuth.getCurrentUser(); // Отримуємо актуального користувача
+            FirebaseUser user = mAuth.getCurrentUser();
             if (user != null) {
                 Toast.makeText(this, "Ви залогінені як: " + user.getEmail(), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Будь ласка, увійдіть", Toast.LENGTH_SHORT).show();
                 Intent accountIntent = new Intent(SecondActivity.this, AccountActivity.class);
                 startActivity(accountIntent);
-                // finish(); // Можливо, не потрібно закривати, якщо просто перенаправляємо
             }
         });
         fabAddCar.setOnClickListener(v -> {
@@ -159,17 +151,14 @@ public class SecondActivity extends AppCompatActivity {
         searchViewCars.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // Користувач натиснув "пошук" на клавіатурі (зазвичай не потрібно для живого пошуку)
-                // filterCarList(query); // Вже обробляється в onQueryTextChange
-                searchViewCars.clearFocus(); // Приховати клавіатуру
-                return true; // Подія оброблена
+                searchViewCars.clearFocus();
+                return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Текст змінився, фільтруємо список
                 filterCarList(newText);
-                return true; // Подія оброблена
+                return true;
             }
         });
     }
@@ -177,15 +166,13 @@ public class SecondActivity extends AppCompatActivity {
     private void filterCarList(String query) {
         List<Car> filteredList = new ArrayList<>();
         if (query == null || query.trim().isEmpty()) {
-            filteredList.addAll(originalCarList); // Якщо запит порожній, показуємо всі авто
+            filteredList.addAll(originalCarList);
         } else {
             String lowerCaseQuery = query.toLowerCase(Locale.getDefault()).trim();
             for (Car car : originalCarList) {
-                // Критерії пошуку: назва, тип, країна, рік. Можна додати більше.
                 boolean nameMatches = car.getName() != null && car.getName().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery);
                 boolean typeMatches = car.getType() != null && car.getType().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery);
                 boolean countryMatches = car.getCountry() != null && car.getCountry().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery);
-                // Для року можна зробити просту перевірку входження, або більш складну логіку
                 boolean yearMatches = String.valueOf(car.getYear()).contains(lowerCaseQuery);
 
                 if (nameMatches || typeMatches || countryMatches || yearMatches) {
@@ -194,11 +181,11 @@ public class SecondActivity extends AppCompatActivity {
             }
         }
 
-        carList.clear(); // Очищуємо поточний список в адаптері
-        carList.addAll(filteredList); // Додаємо відфільтровані результати
+        carList.clear();
+        carList.addAll(filteredList);
 
         if (carAdapter != null) {
-            carAdapter.notifyDataSetChanged(); // Оновлюємо RecyclerView
+            carAdapter.notifyDataSetChanged();
         } else {
             Log.e("SecondActivity", "carAdapter is null in filterCarList");
         }
@@ -219,11 +206,10 @@ public class SecondActivity extends AppCompatActivity {
                         });
             }
         }
-        // НЕ викликаємо loadCarsFromFirebase() тут, ValueEventListener оновить список автоматично
     }
 
     public void loadCarsFromFirebase() {
-        if (carsValueEventListener == null) { // Додаємо слухача тільки якщо він ще не існує
+        if (carsValueEventListener == null) {
             carsValueEventListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -237,10 +223,9 @@ public class SecondActivity extends AppCompatActivity {
                         }
                     }
                     originalCarList.clear();
-                    originalCarList.addAll(tempList); // Зберігаємо повний список
+                    originalCarList.addAll(tempList);
                     Log.d("SecondActivity", "Дані завантажено з Firebase, originalCarList розмір: " + originalCarList.size());
 
-                    // Застосовуємо поточний фільтр (якщо є) після завантаження/оновлення даних
                     String currentQuery = (searchViewCars != null) ? searchViewCars.getQuery().toString() : "";
                     filterCarList(currentQuery);
                 }
@@ -259,7 +244,7 @@ public class SecondActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (carsValueEventListener != null) {
-            mDatabaseRef.removeEventListener(carsValueEventListener); // Важливо видаляти слухача
+            mDatabaseRef.removeEventListener(carsValueEventListener);
         }
     }
 }

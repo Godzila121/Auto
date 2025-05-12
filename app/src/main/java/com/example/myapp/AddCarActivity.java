@@ -13,10 +13,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-// === ПОЧАТОК: Додано імпорти для FirebaseAuth ===
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-// === КІНЕЦЬ: Додано імпорти для FirebaseAuth ===
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -30,9 +29,7 @@ public class AddCarActivity extends AppCompatActivity {
     private DatabaseReference carsRef;
     private TextView displayAddCarTotalPrice;
 
-    // === ПОЧАТОК: Додано поле для FirebaseAuth ===
     private FirebaseAuth mAuth;
-    // === КІНЕЦЬ: Додано поле для FirebaseAuth ===
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -40,9 +37,7 @@ public class AddCarActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_car);
 
-        // === ПОЧАТОК: Ініціалізація FirebaseAuth ===
         mAuth = FirebaseAuth.getInstance();
-        // === КІНЕЦЬ: Ініціалізація FirebaseAuth ===
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         carsRef = database.getReference("cars");
@@ -113,22 +108,19 @@ public class AddCarActivity extends AppCompatActivity {
 
                 Car newCar = new Car(name, type, year, country, price, engineCapacity, carAge);
 
-                // === ПОЧАТОК: Встановлення userId для об'єкта Car ===
                 FirebaseUser currentUser = mAuth.getCurrentUser();
                 if (currentUser != null) {
                     newCar.setUserId(currentUser.getUid());
                 } else {
-                    // Ця ситуація малоймовірна, якщо доступ до AddCarActivity мають лише залогінені користувачі,
-                    // але перевірка не завадить.
+
                     Toast.makeText(AddCarActivity.this, "Помилка: користувача не автентифіковано.", Toast.LENGTH_LONG).show();
                     Log.e("AddCarActivity", "Неможливо встановити userId, користувач не автентифікований.");
-                    return; // Не зберігаємо автомобіль, якщо не можемо встановити власника
+                    return;
                 }
-                // === КІНЕЦЬ: Встановлення userId для об'єкта Car ===
 
                 String carId = carsRef.push().getKey();
                 if (carId != null) {
-                    newCar.setId(carId); // Встановлюємо згенерований ключ як ID самого автомобіля
+                    newCar.setId(carId);
                     carsRef.child(carId).setValue(newCar)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(AddCarActivity.this, "Автомобіль додано успішно", Toast.LENGTH_SHORT).show();

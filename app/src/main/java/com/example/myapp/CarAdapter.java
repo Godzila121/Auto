@@ -38,9 +38,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         this.favoriteCarIds = (favoriteCarIds != null) ? favoriteCarIds : new ArrayList<>();
         this.allowDeletion = allowDeletion;
         this.allowPurchase = allowPurchase;
-        // === ПОЧАТОК: Логування при створенні адаптера ===
         Log.d("CarAdapter_Lifecycle", "Adapter created. allowDeletion: " + allowDeletion + ", allowPurchase: " + allowPurchase);
-        // === КІНЕЦЬ: Логування при створенні адаптера ===
     }
 
     public CarAdapter(Context context, List<Car> carList, List<String> favoriteCarIds, boolean allowDeletion) {
@@ -114,7 +112,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
             deleteCarButton = itemView.findViewById(R.id.button_delete_car);
             buyCarButton = itemView.findViewById(R.id.button_buy_car);
 
-            // Логування результату findViewById для кнопки "Купити"
             if (buyCarButton == null) {
                 Log.e("CarAdapter_ViewHolder", "Кнопка button_buy_car НЕ ЗНАЙДЕНА в item_car.xml!");
             } else {
@@ -126,7 +123,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
 
             heartButton.setOnClickListener(v -> {
-                // ... (ваш існуючий код обробника heartButton) ...
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 if (currentUser != null) {
                     if (currentCar != null && currentCar.getId() != null) {
@@ -150,9 +146,8 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 }
             });
 
-            if (deleteCarButton != null) { // Додаємо перевірку перед встановленням слухача
+            if (deleteCarButton != null) {
                 deleteCarButton.setOnClickListener(v -> {
-                    // ... (ваш існуючий код обробника deleteCarButton) ...
                     if (currentCar == null || currentCar.getId() == null) {
                         Log.e("CarAdapter", "Delete clicked: currentCar or carId is null");
                         Toast.makeText(context, "Помилка: Неможливо отримати дані автомобіля.", Toast.LENGTH_SHORT).show();
@@ -180,7 +175,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
 
             if (buyCarButton != null) {
                 buyCarButton.setOnClickListener(v -> {
-                    // ... (ваш існуючий код обробника buyCarButton) ...
                     if (currentCar == null || currentCar.getId() == null || currentCar.getUserId() == null || currentCar.getName() == null) {
                         Log.e("CarAdapter", "Buy clicked: currentCar or its essential fields are null");
                         Toast.makeText(context, "Помилка: Недостатньо даних про автомобіль.", Toast.LENGTH_SHORT).show();
@@ -212,7 +206,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
         public void bind(Car car) {
             currentCar = car;
 
-            // === ПОЧАТОК: Детальне логування для кнопки "Купити" ===
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             String currentUserIdForLog = (currentUser != null) ? currentUser.getUid() : "null_user (not logged in)";
             String carNameForLog = (car != null && car.getName() != null) ? car.getName() : "N/A_CAR_NAME";
@@ -241,10 +234,8 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 Log.e("CarAdapter_BuyButton", "  buyCarButton (R.id.button_buy_car) НЕ ЗНАЙДЕНО в XML!");
             }
             Log.d("CarAdapter_BuyButton", "  ФІНАЛЬНЕ РІШЕННЯ - shouldShowBuyButton: " + shouldShowBuyButton);
-            // === КІНЕЦЬ: Детальне логування ===
 
 
-            // Встановлення тексту та зображень (ваш існуючий код)
             carName.setText(car.getName());
             carType.setText("Тип: " + car.getType());
             carYear.setText(String.valueOf(car.getYear()));
@@ -262,7 +253,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 heartButton.setImageResource(R.drawable.ic_favorite);
             }
 
-            // Видимість кнопки видалення
             if (deleteCarButton != null) {
                 if (allowDeletion && currentUser != null && car.getUserId() != null && car.getUserId().equals(currentUser.getUid())) {
                     deleteCarButton.setVisibility(View.VISIBLE);
@@ -271,7 +261,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.CarViewHolder> {
                 }
             }
 
-            // Видимість кнопки "Купити" на основі логіки вище
             if (buyCarButton != null) {
                 if (shouldShowBuyButton) {
                     buyCarButton.setVisibility(View.VISIBLE);

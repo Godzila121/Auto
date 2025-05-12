@@ -23,7 +23,7 @@ public class FavoriteActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CarAdapter carAdapter;
     private List<Car> favoriteCars = new ArrayList<>();
-    private List<String> favoriteCarIds = new ArrayList<>(); // Для зберігання ID улюблених
+    private List<String> favoriteCarIds = new ArrayList<>();
 
     private ImageView buttonSearch;
     private ImageView buttonFavorite;
@@ -39,16 +39,13 @@ public class FavoriteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorite);
 
-        // Ініціалізація Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        // Перевірка стану входу
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            // Користувач не увійшов, перенаправлення на екран облікового запису
             Intent accountIntent = new Intent(FavoriteActivity.this, AccountActivity.class);
             startActivity(accountIntent);
-            finish(); // Закриваємо FavoriteActivity
+            finish();
             return;
         }
 
@@ -96,10 +93,9 @@ public class FavoriteActivity extends AppCompatActivity {
     }
 
     private void loadFavoriteCarIdsFromFirestore() {
-        FirebaseUser currentUser = mAuth.getCurrentUser(); // Вже є в onCreate, але для ясності
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             Log.e("FavoriteActivity", "Користувач не увійшов, неможливо завантажити ID улюблених.");
-            // Можна додати оновлення UI тут, якщо потрібно
             if(NoFavorites != null) NoFavorites.setVisibility(TextView.VISIBLE);
             favoriteCars.clear();
             favoriteCarIds.clear();
@@ -107,12 +103,10 @@ public class FavoriteActivity extends AppCompatActivity {
             return;
         }
 
-        // Ваш FirebaseHelper.getFavoriteCarIds вже використовує FirebaseAuth.getInstance().getCurrentUser() всередині getUserFavoritesCollection()
-        // тому передавати currentUser.getUid() явно не обов'язково, якщо FirebaseHelper не змінено
         FirebaseHelper.getFavoriteCarIds(receivedFavoriteIds -> {
             Log.d("FavoriteActivity", "FirebaseHelper.getFavoriteCarIds - отримано ID: " + receivedFavoriteIds.toString());
             this.favoriteCarIds.clear();
-            if (receivedFavoriteIds != null) { // Додайте перевірку на null
+            if (receivedFavoriteIds != null) {
                 this.favoriteCarIds.addAll(receivedFavoriteIds);
             }
             Log.d("FavoriteActivity", "Список favoriteCarIds в FavoriteActivity: " + this.favoriteCarIds.toString());

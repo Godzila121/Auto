@@ -57,7 +57,7 @@ public class PurchaseRequestAdapter extends RecyclerView.Adapter<PurchaseRequest
     class PurchaseRequestViewHolder extends RecyclerView.ViewHolder {
         TextView textCarName, textBuyerEmail, textRequestStatus;
         Button buttonAccept, buttonDecline;
-        LinearLayout layoutRequestActions; // Для показу/приховування кнопок
+        LinearLayout layoutRequestActions;
 
         PurchaseRequest currentRequest;
 
@@ -81,9 +81,7 @@ public class PurchaseRequestAdapter extends RecyclerView.Adapter<PurchaseRequest
                                 @Override
                                 public void onSuccess() {
                                     Toast.makeText(context, "Продаж автомобіля \"" + currentRequest.getCarName() + "\" підтверджено!", Toast.LENGTH_SHORT).show();
-                                    // Видаляємо автомобіль з Realtime Database
                                     FirebaseHelper.deleteCarFromRealtimeDatabase(context, currentRequest.getCarId());
-                                    // Список запитів та список автомобілів користувача оновляться через ValueEventListeners в AccountActivity
                                 }
                                 @Override
                                 public void onFailure(Exception e) {
@@ -105,7 +103,6 @@ public class PurchaseRequestAdapter extends RecyclerView.Adapter<PurchaseRequest
                                 @Override
                                 public void onSuccess() {
                                     Toast.makeText(context, "Запит на купівлю \"" + currentRequest.getCarName() + "\" відхилено.", Toast.LENGTH_SHORT).show();
-                                    // Список запитів оновиться через ValueEventListener в AccountActivity
                                 }
                                 @Override
                                 public void onFailure(Exception e) {
@@ -127,15 +124,15 @@ public class PurchaseRequestAdapter extends RecyclerView.Adapter<PurchaseRequest
             switch (request.getStatus()) {
                 case "pending":
                     statusDisplay = "Статус: Очікується ваша відповідь";
-                    layoutRequestActions.setVisibility(View.VISIBLE); // Показуємо кнопки для pending запитів
+                    layoutRequestActions.setVisibility(View.VISIBLE);
                     break;
                 case "accepted":
                     statusDisplay = "Статус: Прийнято (Автомобіль продано)";
-                    layoutRequestActions.setVisibility(View.GONE); // Ховаємо кнопки для вже оброблених
+                    layoutRequestActions.setVisibility(View.GONE);
                     break;
                 case "declined":
                     statusDisplay = "Статус: Відхилено";
-                    layoutRequestActions.setVisibility(View.GONE); // Ховаємо кнопки
+                    layoutRequestActions.setVisibility(View.GONE);
                     break;
                 default:
                     statusDisplay = "Статус: " + request.getStatus();

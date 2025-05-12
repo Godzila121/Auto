@@ -19,7 +19,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue; // <-- Імпорт для ServerValue.TIMESTAMP
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -36,9 +36,8 @@ public class FirebaseHelper {
     private static final String USERS_COLLECTION = "users";
     private static final String FAVORITES_SUBCOLLECTION = "favorites";
 
-    // === ПОЧАТОК: Нова константа для вузла запитів на купівлю ===
+
     public static final String PURCHASE_REQUESTS_NODE_RTDB = "purchase_requests";
-    // === КІНЕЦЬ: Нова константа ===
 
     private static FirebaseFirestore dbFirestore = FirebaseFirestore.getInstance();
 
@@ -71,7 +70,7 @@ public class FirebaseHelper {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Car> carList = new ArrayList<>();
-                    if (queryDocumentSnapshots != null) { // Додана перевірка на null
+                    if (queryDocumentSnapshots != null) {
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                             Car car = documentSnapshot.toObject(Car.class);
                             if (car != null) {
@@ -210,7 +209,6 @@ public class FirebaseHelper {
                 });
     }
 
-    // === ПОЧАТОК: Нові методи для роботи з запитами на купівлю ===
     public static void createPurchaseRequest(Context context, PurchaseRequest request) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -218,13 +216,10 @@ public class FirebaseHelper {
             Log.w("FirebaseHelper", "createPurchaseRequest: Користувач не увійшов.");
             return;
         }
-        // Переконуємося, що buyerId та buyerEmail встановлені коректно для поточного користувача
         request.setBuyerId(currentUser.getUid());
         if (currentUser.getEmail() != null) {
             request.setBuyerEmail(currentUser.getEmail());
         }
-        // Переконуємося, що timestamp встановлений на серверний час (це вже робиться в конструкторі PurchaseRequest)
-        // request.setTimestamp(ServerValue.TIMESTAMP); // Забезпечуємо, якщо не в конструкторі
 
         DatabaseReference requestsRef = FirebaseDatabase.getInstance().getReference(PURCHASE_REQUESTS_NODE_RTDB);
         String requestId = requestsRef.push().getKey();
@@ -234,7 +229,7 @@ public class FirebaseHelper {
             Log.e("FirebaseHelper", "Не вдалося згенерувати requestId для purchase_request");
             return;
         }
-        request.setRequestId(requestId); // Встановлюємо згенерований ID в об'єкт запиту
+        request.setRequestId(requestId);
 
         requestsRef.child(requestId).setValue(request)
                 .addOnSuccessListener(aVoid -> {
@@ -247,7 +242,6 @@ public class FirebaseHelper {
                 });
     }
 
-    // Метод для оновлення статусу запиту на купівлю (продавець приймає/відхиляє)
     public static void updatePurchaseRequestStatus(Context context, String requestId, String newStatus, final OnRequestUpdatedListener listener) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -266,15 +260,13 @@ public class FirebaseHelper {
 
         DatabaseReference requestRef = FirebaseDatabase.getInstance().getReference(PURCHASE_REQUESTS_NODE_RTDB).child(requestId);
 
-        // Перевірка, чи поточний користувач є продавцем цього запиту
         requestRef.child("sellerId").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String sellerId = snapshot.getValue(String.class);
                 if (currentUser.getUid().equals(sellerId)) {
-                    // Користувач є продавцем, можна оновлювати статус
                     Map<String, Object> statusUpdate = new HashMap<>();
-                    statusUpdate.put("status", newStatus); // Оновлюємо лише поле status
+                    statusUpdate.put("status", newStatus);
 
                     requestRef.updateChildren(statusUpdate)
                             .addOnSuccessListener(aVoid -> {
@@ -301,12 +293,10 @@ public class FirebaseHelper {
         });
     }
 
-    // Інтерфейс для callback при оновленні статусу запиту
     public interface OnRequestUpdatedListener {
         void onSuccess();
         void onFailure(Exception e);
     }
-    // === КІНЕЦЬ: Нові методи для роботи з запитами на купівлю ===
 
 
     public interface OnCarListLoadedListener {
