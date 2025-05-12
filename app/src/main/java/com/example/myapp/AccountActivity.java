@@ -1,7 +1,6 @@
 package com.example.myapp;
 
 import android.content.Intent;
-// import android.content.SharedPreferences; // Може бути непотрібним, якщо SharedPreferencesHelper інкапсулює все
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,21 +29,31 @@ import java.util.List;
 
 public class AccountActivity extends AppCompatActivity {
 
-    private ImageView buttonSearch, buttonFavorite, buttonAccountNav, iconProfile;
+    private ImageView buttonSearch, buttonFavorite, buttonAccount, iconProfile; // buttonAccount - для навігації
     private Button buttonRegister, buttonLogout, buttonLogin;
     private EditText inputEmail, inputPassword;
     private TextView textWelcome;
 
+    // Для списку автомобілів користувача
     private RecyclerView recyclerViewMyCars;
     private CarAdapter myCarsAdapter;
     private List<Car> myCarList;
     private List<String> myAccountFavoriteCarIds;
     private TextView textMyCarsTitle;
     private TextView textNoMyCars;
-
-    private DatabaseReference allCarsRef;
+    private DatabaseReference allCarsRefRTDB; // Посилання на вузол "cars" в RTDB
     private Query userCarsQuery;
     private ValueEventListener userCarsValueEventListener;
+
+    // Для списку вхідних запитів на купівлю
+    private RecyclerView recyclerViewPurchaseRequests;
+    private PurchaseRequestAdapter purchaseRequestAdapter;
+    private List<PurchaseRequest> purchaseRequestList;
+    private TextView textPurchaseRequestsTitle;
+    private TextView textNoPurchaseRequests;
+    private DatabaseReference allPurchaseRequestsRefRTDB;
+    private Query userIncomingRequestsQuery;
+    private ValueEventListener purchaseRequestsValueEventListener;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -55,7 +64,11 @@ public class AccountActivity extends AppCompatActivity {
         setContentView(R.layout.activity_account);
 
         mAuth = FirebaseAuth.getInstance();
+        allCarsRefRTDB = FirebaseDatabase.getInstance().getReference("cars");
+        allPurchaseRequestsRefRTDB = FirebaseDatabase.getInstance().getReference(FirebaseHelper.PURCHASE_REQUESTS_NODE_RTDB);
 
+
+        // Ініціалізація UI елементів
         iconProfile = findViewById(R.id.icon_profile);
         inputEmail = findViewById(R.id.input_email);
         inputPassword = findViewById(R.id.input_password);
@@ -66,33 +79,40 @@ public class AccountActivity extends AppCompatActivity {
 
         buttonSearch = findViewById(R.id.button_search);
         buttonFavorite = findViewById(R.id.button_favorite);
-        buttonAccountNav = findViewById(R.id.button_account);
+        buttonAccount = findViewById(R.id.button_account); // Це кнопка навігації "Акаунт"
 
+        // Ініціалізація для списку "Мої автомобілі"
         textMyCarsTitle = findViewById(R.id.text_my_cars_title);
         recyclerViewMyCars = findViewById(R.id.recycler_view_my_cars);
         textNoMyCars = findViewById(R.id.text_no_my_cars);
-
         myCarList = new ArrayList<>();
         myAccountFavoriteCarIds = new ArrayList<>();
-
         recyclerViewMyCars.setLayoutManager(new LinearLayoutManager(this));
-        // === ПОЧАТОК: Змінено ініціалізацію адаптера ===
-        myCarsAdapter = new CarAdapter(this, myCarList, myAccountFavoriteCarIds, true); // Передаємо true для allowDeletion
-        // === КІНЕЦЬ: Змінено ініціалізацію адаптера ===
+        // `allowDeletion = true` (можна видаляти свої авто), `allowPurchase = false` (не можна купувати свої авто)
+        myCarsAdapter = new CarAdapter(this, myCarList, myAccountFavoriteCarIds, true, false);
         recyclerViewMyCars.setAdapter(myCarsAdapter);
 
-        allCarsRef = FirebaseDatabase.getInstance().getReference("cars");
+        // Ініціалізація для списку "Вхідні запити на купівлю"
+        textPurchaseRequestsTitle = findViewById(R.id.text_purchase_requests_title);
+        recyclerViewPurchaseRequests = findViewById(R.id.recycler_view_purchase_requests);
+        textNoPurchaseRequests = findViewById(R.id.text_no_purchase_requests);
+        purchaseRequestList = new ArrayList<>();
+        recyclerViewPurchaseRequests.setLayoutManager(new LinearLayoutManager(this));
+        purchaseRequestAdapter = new PurchaseRequestAdapter(this, purchaseRequestList);
+        recyclerViewPurchaseRequests.setAdapter(purchaseRequestAdapter);
 
         setupAuthListener();
 
+        // Обробники кнопок
         buttonRegister.setOnClickListener(v -> registerUser());
         buttonLogin.setOnClickListener(v -> loginUser());
         buttonLogout.setOnClickListener(v -> {
-            detachUserCarsListener();
-            mAuth.signOut();
+            detachAllListeners(); // Від'єднуємо всіх слухачів перед виходом
+            mAuth.signOut(); // AuthStateListener обробить оновлення UI
         });
 
         iconProfile.setOnClickListener(v -> showProfileToast());
+        // ... (обробники для buttonSearch, buttonFavorite, buttonAccount залишаються)
         buttonSearch.setOnClickListener(v -> {
             startActivity(new Intent(this, SecondActivity.class));
             overridePendingTransition(0, 0);
@@ -101,7 +121,7 @@ public class AccountActivity extends AppCompatActivity {
             startActivity(new Intent(this, FavoriteActivity.class));
             overridePendingTransition(0, 0);
         });
-        buttonAccountNav.setOnClickListener(v -> {
+        buttonAccount.setOnClickListener(v -> {
             Toast.makeText(this, "Ви вже на сторінці акаунта", Toast.LENGTH_SHORT).show();
         });
     }
@@ -119,7 +139,7 @@ public class AccountActivity extends AppCompatActivity {
             } else {
                 Log.d("AccountActivity", "AuthState: Користувач вийшов.");
                 SharedPreferencesHelper.saveLoginStatus(this, false);
-                SharedPreferencesHelper.clearUserEmail(this);
+                SharedPreferencesHelper.clearUserEmail(this); // Або SharedPreferencesHelper.clearUserSessionData(this);
                 updateUIForLoggedOutUser();
             }
         };
@@ -138,7 +158,10 @@ public class AccountActivity extends AppCompatActivity {
 
         textMyCarsTitle.setVisibility(View.VISIBLE);
         loadUserCars(user.getUid());
-        loadMyFavoriteCarIdsForAdapter(); // Змінено: UID більше не передається сюди
+        loadMyFavoriteCarIdsForAdapter(); // UID не потрібен, FirebaseHelper.getFavoriteCarIds його сам отримає
+
+        textPurchaseRequestsTitle.setVisibility(View.VISIBLE);
+        loadIncomingPurchaseRequests(user.getUid());
     }
 
     private void updateUIForLoggedOutUser() {
@@ -156,14 +179,21 @@ public class AccountActivity extends AppCompatActivity {
         textMyCarsTitle.setVisibility(View.GONE);
         recyclerViewMyCars.setVisibility(View.GONE);
         textNoMyCars.setVisibility(View.GONE);
-
         myCarList.clear();
-        myAccountFavoriteCarIds.clear();
+        myAccountFavoriteCarIds.clear(); // Очищаємо також ID улюблених для адаптера "моїх авто"
         if (myCarsAdapter != null) {
             myCarsAdapter.notifyDataSetChanged();
             myCarsAdapter.updateFavoriteCarIds(myAccountFavoriteCarIds);
         }
-        detachUserCarsListener();
+
+        textPurchaseRequestsTitle.setVisibility(View.GONE);
+        recyclerViewPurchaseRequests.setVisibility(View.GONE);
+        textNoPurchaseRequests.setVisibility(View.GONE);
+        purchaseRequestList.clear();
+        if (purchaseRequestAdapter != null) {
+            purchaseRequestAdapter.notifyDataSetChanged();
+        }
+        detachAllListeners();
     }
 
     private void registerUser() {
@@ -177,7 +207,7 @@ public class AccountActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(this, "Реєстрація успішна!", Toast.LENGTH_SHORT).show();
-                        // SharedPreferencesHelper.saveUserRegistrationInfo(this, email); // Замість старого saveUserCredentials
+                        // SharedPreferencesHelper.saveUserRegistrationInfo(this, email); // Викликається з AuthStateListener
                     } else {
                         Toast.makeText(this, "Помилка реєстрації: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
@@ -196,7 +226,7 @@ public class AccountActivity extends AppCompatActivity {
                     if (!task.isSuccessful()) {
                         Toast.makeText(this, "Помилка входу: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
-                    // AuthStateListener оновить UI в будь-якому випадку після завершення цього завдання
+                    // AuthStateListener оновить UI
                 });
     }
 
@@ -211,8 +241,7 @@ public class AccountActivity extends AppCompatActivity {
 
     private void loadUserCars(String currentUserId) {
         detachUserCarsListener();
-
-        userCarsQuery = allCarsRef.orderByChild("userId").equalTo(currentUserId);
+        userCarsQuery = allCarsRefRTDB.orderByChild("userId").equalTo(currentUserId);
         Log.d("AccountActivity", "Завантаження автомобілів для userId: " + currentUserId);
 
         userCarsValueEventListener = new ValueEventListener() {
@@ -220,7 +249,6 @@ public class AccountActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 myCarList.clear();
                 if (dataSnapshot.exists()) {
-                    Log.d("AccountActivity", "Знайдено автомобілів користувача: " + dataSnapshot.getChildrenCount());
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Car car = snapshot.getValue(Car.class);
                         if (car != null) {
@@ -228,66 +256,116 @@ public class AccountActivity extends AppCompatActivity {
                             myCarList.add(car);
                         }
                     }
-                } else {
-                    Log.d("AccountActivity", "Автомобілі користувача не знайдено.");
                 }
-
-                if (myCarList.isEmpty()) {
-                    if (textNoMyCars != null) textNoMyCars.setVisibility(View.VISIBLE);
-                    if (recyclerViewMyCars != null) recyclerViewMyCars.setVisibility(View.GONE);
-                } else {
-                    if (textNoMyCars != null) textNoMyCars.setVisibility(View.GONE);
-                    if (recyclerViewMyCars != null) recyclerViewMyCars.setVisibility(View.VISIBLE);
-                }
-                if (myCarsAdapter != null) {
-                    myCarsAdapter.notifyDataSetChanged();
-                }
+                updateMyCarsUI();
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("AccountActivity", "Помилка завантаження автомобілів користувача.", databaseError.toException());
-                Toast.makeText(AccountActivity.this, "Помилка завантаження ваших автомобілів", Toast.LENGTH_SHORT).show();
-                if (textNoMyCars != null) textNoMyCars.setVisibility(View.VISIBLE);
-                if (recyclerViewMyCars != null) recyclerViewMyCars.setVisibility(View.GONE);
+                myCarList.clear(); // Очищаємо список у випадку помилки
+                updateMyCarsUI();
             }
         };
         userCarsQuery.addValueEventListener(userCarsValueEventListener);
     }
 
-    private void loadMyFavoriteCarIdsForAdapter() { // Видалено параметр currentUserId
+    private void updateMyCarsUI() {
+        if (myCarList.isEmpty()) {
+            if (textNoMyCars != null) textNoMyCars.setVisibility(View.VISIBLE);
+            if (recyclerViewMyCars != null) recyclerViewMyCars.setVisibility(View.GONE);
+        } else {
+            if (textNoMyCars != null) textNoMyCars.setVisibility(View.GONE);
+            if (recyclerViewMyCars != null) recyclerViewMyCars.setVisibility(View.VISIBLE);
+        }
+        if (myCarsAdapter != null) {
+            myCarsAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void loadMyFavoriteCarIdsForAdapter() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            Log.w("AccountActivity", "Користувач не залогінений, неможливо завантажити ID улюблених.");
             this.myAccountFavoriteCarIds.clear();
-            if (myCarsAdapter != null) {
-                myCarsAdapter.updateFavoriteCarIds(this.myAccountFavoriteCarIds);
-            }
+            if (myCarsAdapter != null) myCarsAdapter.updateFavoriteCarIds(this.myAccountFavoriteCarIds);
             return;
         }
-        // FirebaseHelper.getFavoriteCarIds не приймає UID, він отримує його всередині
-        FirebaseHelper.getFavoriteCarIds((List<String> receivedFavoriteIds) -> {
-            Log.d("AccountActivity", "Завантажено ID улюблених (" + (receivedFavoriteIds != null ? receivedFavoriteIds.size() : "0") + ") для адаптера профілю.");
+        FirebaseHelper.getFavoriteCarIds((List<String> receivedFavoriteIds) -> { // Виклик без UID
             this.myAccountFavoriteCarIds.clear();
             if (receivedFavoriteIds != null) {
                 this.myAccountFavoriteCarIds.addAll(receivedFavoriteIds);
             }
             if (myCarsAdapter != null) {
                 myCarsAdapter.updateFavoriteCarIds(this.myAccountFavoriteCarIds);
-            } else {
-                Log.e("AccountActivity", "myCarsAdapter is null in loadMyFavoriteCarIdsForAdapter callback");
             }
         });
+    }
+
+    private void loadIncomingPurchaseRequests(String currentUserId) {
+        detachPurchaseRequestsListener();
+        userIncomingRequestsQuery = allPurchaseRequestsRefRTDB.orderByChild("sellerId").equalTo(currentUserId);
+        Log.d("AccountActivity", "Завантаження вхідних запитів на купівлю для sellerId: " + currentUserId);
+
+        purchaseRequestsValueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                purchaseRequestList.clear();
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        PurchaseRequest request = snapshot.getValue(PurchaseRequest.class);
+                        if (request != null && "pending".equals(request.getStatus())) {
+                            if (request.getRequestId() == null || request.getRequestId().isEmpty()) {
+                                request.setRequestId(snapshot.getKey());
+                            }
+                            purchaseRequestList.add(request);
+                        }
+                    }
+                }
+                updatePurchaseRequestsUI();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("AccountActivity", "Помилка завантаження запитів на купівлю.", databaseError.toException());
+                purchaseRequestList.clear(); // Очищаємо список у випадку помилки
+                updatePurchaseRequestsUI();
+            }
+        };
+        userIncomingRequestsQuery.addValueEventListener(purchaseRequestsValueEventListener);
+    }
+
+    private void updatePurchaseRequestsUI() {
+        if (purchaseRequestList.isEmpty()) {
+            if (textNoPurchaseRequests != null) textNoPurchaseRequests.setVisibility(View.VISIBLE);
+            if (recyclerViewPurchaseRequests != null) recyclerViewPurchaseRequests.setVisibility(View.GONE);
+        } else {
+            if (textNoPurchaseRequests != null) textNoPurchaseRequests.setVisibility(View.GONE);
+            if (recyclerViewPurchaseRequests != null) recyclerViewPurchaseRequests.setVisibility(View.VISIBLE);
+        }
+        if (purchaseRequestAdapter != null) {
+            purchaseRequestAdapter.notifyDataSetChanged();
+        }
     }
 
     private void detachUserCarsListener() {
         if (userCarsQuery != null && userCarsValueEventListener != null) {
             userCarsQuery.removeEventListener(userCarsValueEventListener);
-            Log.d("AccountActivity", "Слухач автомобілів користувача від'єднано.");
             userCarsValueEventListener = null;
             userCarsQuery = null;
         }
     }
+
+    private void detachPurchaseRequestsListener() {
+        if (userIncomingRequestsQuery != null && purchaseRequestsValueEventListener != null) {
+            userIncomingRequestsQuery.removeEventListener(purchaseRequestsValueEventListener);
+            purchaseRequestsValueEventListener = null;
+            userIncomingRequestsQuery = null;
+        }
+    }
+
+    private void detachAllListeners() {
+        detachUserCarsListener();
+        detachPurchaseRequestsListener();
+    }
+
 
     @Override
     protected void onStart() {
@@ -295,6 +373,7 @@ public class AccountActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.addAuthStateListener(mAuthListener);
         }
+        // AuthStateListener сам викличе оновлення UI та завантаження даних, якщо користувач вже увійшов
     }
 
     @Override
@@ -303,6 +382,6 @@ public class AccountActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
-        detachUserCarsListener();
+        detachAllListeners(); // Від'єднуємо всіх слухачів
     }
 }

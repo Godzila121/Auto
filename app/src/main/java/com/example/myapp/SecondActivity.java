@@ -92,7 +92,7 @@ public class SecondActivity extends AppCompatActivity {
             return;
         }
 
-        carAdapter = new CarAdapter(this, carList, favoriteCarIds); // Використовуємо this.carList
+        carAdapter = new CarAdapter(this, carList, favoriteCarIds, false, true); // Використовуємо this.carList
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(carAdapter);
 

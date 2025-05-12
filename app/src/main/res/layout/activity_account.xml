@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#FFFFFF"
@@ -22,105 +23,162 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true"> <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="24dp" android:gravity="center_horizontal">
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Профіль"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginBottom="16dp" android:layout_gravity="center_horizontal"/>
-
-        <TextView
-            android:id="@+id/text_welcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ласкаво просимо"
-            android:visibility="gone" android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginBottom="24dp" android:layout_gravity="center"
-            tools:visibility="visible" /> <EditText
-        android:id="@+id/input_email"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Введіть вашу пошту"
-        android:inputType="textEmailAddress"
-        android:padding="12dp"
-        android:textColor="#000000"
-        android:textColorHint="#888888"
-        android:background="@drawable/edittext_background"
-        android:layout_marginBottom="16dp" />
-
-        <EditText
-            android:id="@+id/input_password"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Введіть пароль"
-            android:inputType="textPassword"
-            android:padding="12dp"
-            android:textColor="#000000"
-            android:textColorHint="#888888"
-            android:background="@drawable/edittext_background"
-            android:layout_marginBottom="16dp" />
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingBottom="24dp"
+            android:gravity="center_horizontal">
 
-        <Button
-            android:id="@+id/button_register"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Зареєструватися"
-            android:layout_marginTop="8dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Профіль"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="16dp"
+                android:layout_gravity="center_horizontal"/>
 
-        <Button
-            android:id="@+id/button_login"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Увійти"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="16dp"/> <TextView
-        android:id="@+id/text_my_cars_title"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Мої додані автомобілі:"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="start" android:visibility="gone"
-        tools:visibility="visible"/>
+            <TextView
+                android:id="@+id/text_welcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ласкаво просимо"
+                android:visibility="gone"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="24dp"
+                android:layout_gravity="center"
+                tools:visibility="visible" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view_my_cars"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="150dp" android:nestedScrollingEnabled="false" android:visibility="gone"
-            tools:listitem="@layout/item_car"
-            tools:visibility="visible"
-            tools:itemCount="2"/> <TextView
-        android:id="@+id/text_no_my_cars"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ви ще не додали жодного автомобіля."
-        android:textSize="16sp"
-        android:textColor="#555555"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone"
-        tools:visibility="gone" /> <Button
-        android:id="@+id/button_logout"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Вийти"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="24dp"
-        android:visibility="gone"
-        tools:visibility="visible" />
+            <EditText
+                android:id="@+id/input_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Введіть вашу пошту"
+                android:inputType="textEmailAddress"
+                android:padding="12dp"
+                android:textColor="#000000"
+                android:textColorHint="#888888"
+                android:background="@drawable/edittext_background"
+                android:layout_marginBottom="16dp" />
 
-    </LinearLayout>
+            <EditText
+                android:id="@+id/input_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Введіть пароль"
+                android:inputType="textPassword"
+                android:padding="12dp"
+                android:textColor="#000000"
+                android:textColorHint="#888888"
+                android:background="@drawable/edittext_background"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/button_register"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Зареєструватися"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/button_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Увійти"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/text_my_cars_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Мої додані автомобілі:"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="start"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_my_cars"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="150dp"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone"
+                tools:listitem="@layout/item_car"
+                tools:visibility="visible"
+                tools:itemCount="2"/>
+
+            <TextView
+                android:id="@+id/text_no_my_cars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ви ще не додали жодного автомобіля."
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:layout_marginTop="16dp"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                tools:visibility="gone" />
+
+            <TextView
+                android:id="@+id/text_purchase_requests_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Вхідні запити на купівлю:"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="start"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_purchase_requests"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="100dp"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone"
+                tools:listitem="@layout/item_purchase_request"
+                tools:visibility="visible"
+                tools:itemCount="1" />
+
+            <TextView
+                android:id="@+id/text_no_purchase_requests"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="У вас немає активних запитів на купівлю."
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <Button
+                android:id="@+id/button_logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Вийти"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="DuplicateIds" /> </LinearLayout>
     </ScrollView>
 
     <androidx.cardview.widget.CardView

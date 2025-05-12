@@ -6,8 +6,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener; // Імпорт для OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener; // Імпорт для OnSuccessListener
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -19,6 +19,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue; // <-- Імпорт для ServerValue.TIMESTAMP
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -29,13 +30,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class FirebaseHelper {
 
-    // Константа для колекції автомобілів у Firestore (якщо використовується для чогось іншого, наприклад, додавання нових)
     private static final String CAR_LIST_COLLECTION_FIRESTORE = "car_list_firestore";
-    // Назва вузла для автомобілів у Realtime Database
-    private static final String CAR_LIST_NODE_RTDB = "cars"; // Переконайтеся, що це правильна назва вашого вузла
+    private static final String CAR_LIST_NODE_RTDB = "cars";
 
-    private static final String USERS_COLLECTION = "users"; // Для Firestore (улюблені)
-    private static final String FAVORITES_SUBCOLLECTION = "favorites"; // Для Firestore (улюблені)
+    private static final String USERS_COLLECTION = "users";
+    private static final String FAVORITES_SUBCOLLECTION = "favorites";
+
+    // === ПОЧАТОК: Нова константа для вузла запитів на купівлю ===
+    public static final String PURCHASE_REQUESTS_NODE_RTDB = "purchase_requests";
+    // === КІНЕЦЬ: Нова константа ===
 
     private static FirebaseFirestore dbFirestore = FirebaseFirestore.getInstance();
 
@@ -68,11 +71,13 @@ public class FirebaseHelper {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Car> carList = new ArrayList<>();
-                    for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                        Car car = documentSnapshot.toObject(Car.class);
-                        if (car != null) {
-                            car.setId(documentSnapshot.getId());
-                            carList.add(car);
+                    if (queryDocumentSnapshots != null) { // Додана перевірка на null
+                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            Car car = documentSnapshot.toObject(Car.class);
+                            if (car != null) {
+                                car.setId(documentSnapshot.getId());
+                                carList.add(car);
+                            }
                         }
                     }
                     if (listener != null) listener.onCarListLoaded(carList);
@@ -186,18 +191,14 @@ public class FirebaseHelper {
         }
     }
 
-    // === ПОЧАТОК: НОВИЙ МЕТОД для видалення автомобіля з Realtime Database ===
     public static void deleteCarFromRealtimeDatabase(Context context, String carId) {
         if (carId == null || carId.trim().isEmpty()) {
             Log.e("FirebaseHelper", "Неможливо видалити автомобіль: carId є null або порожній.");
             Toast.makeText(context, "Помилка: ID автомобіля недійсний.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         DatabaseReference carNodeRef = FirebaseDatabase.getInstance().getReference(CAR_LIST_NODE_RTDB).child(carId);
-
         Log.d("FirebaseHelper", "Спроба видалення автомобіля з RTDB: " + carNodeRef.toString());
-
         carNodeRef.removeValue()
                 .addOnSuccessListener(aVoid -> {
                     Log.d("FirebaseHelper", "Автомобіль з ID " + carId + " успішно видалено з Realtime Database.");
@@ -208,15 +209,110 @@ public class FirebaseHelper {
                     Toast.makeText(context, "Помилка при видаленні автомобіля: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-    // === КІНЕЦЬ: НОВИЙ МЕТОД для видалення автомобіля ===
+
+    // === ПОЧАТОК: Нові методи для роботи з запитами на купівлю ===
+    public static void createPurchaseRequest(Context context, PurchaseRequest request) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(context, "Будь ласка, увійдіть, щоб зробити запит на купівлю", Toast.LENGTH_SHORT).show();
+            Log.w("FirebaseHelper", "createPurchaseRequest: Користувач не увійшов.");
+            return;
+        }
+        // Переконуємося, що buyerId та buyerEmail встановлені коректно для поточного користувача
+        request.setBuyerId(currentUser.getUid());
+        if (currentUser.getEmail() != null) {
+            request.setBuyerEmail(currentUser.getEmail());
+        }
+        // Переконуємося, що timestamp встановлений на серверний час (це вже робиться в конструкторі PurchaseRequest)
+        // request.setTimestamp(ServerValue.TIMESTAMP); // Забезпечуємо, якщо не в конструкторі
+
+        DatabaseReference requestsRef = FirebaseDatabase.getInstance().getReference(PURCHASE_REQUESTS_NODE_RTDB);
+        String requestId = requestsRef.push().getKey();
+
+        if (requestId == null) {
+            Toast.makeText(context, "Помилка створення запиту на купівлю (не вдалося згенерувати ID)", Toast.LENGTH_SHORT).show();
+            Log.e("FirebaseHelper", "Не вдалося згенерувати requestId для purchase_request");
+            return;
+        }
+        request.setRequestId(requestId); // Встановлюємо згенерований ID в об'єкт запиту
+
+        requestsRef.child(requestId).setValue(request)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("FirebaseHelper", "Запит на купівлю для carId: " + request.getCarId() + " створено з ID: " + requestId);
+                    Toast.makeText(context, "Запит на купівлю надіслано!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirebaseHelper", "Помилка створення запиту на купівлю для carId: " + request.getCarId(), e);
+                    Toast.makeText(context, "Не вдалося надіслати запит на купівлю.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Метод для оновлення статусу запиту на купівлю (продавець приймає/відхиляє)
+    public static void updatePurchaseRequestStatus(Context context, String requestId, String newStatus, final OnRequestUpdatedListener listener) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Log.w("FirebaseHelper", "updatePurchaseRequestStatus: Користувач не увійшов.");
+            Toast.makeText(context, "Помилка: користувача не автентифіковано.", Toast.LENGTH_SHORT).show();
+            if (listener != null) listener.onFailure(new Exception("Користувача не автентифіковано"));
+            return;
+        }
+
+        if (requestId == null || requestId.trim().isEmpty()) {
+            Log.e("FirebaseHelper", "updatePurchaseRequestStatus: requestId є null або порожній.");
+            Toast.makeText(context, "Помилка: недійсний ID запиту.", Toast.LENGTH_SHORT).show();
+            if (listener != null) listener.onFailure(new Exception("Недійсний ID запиту"));
+            return;
+        }
+
+        DatabaseReference requestRef = FirebaseDatabase.getInstance().getReference(PURCHASE_REQUESTS_NODE_RTDB).child(requestId);
+
+        // Перевірка, чи поточний користувач є продавцем цього запиту
+        requestRef.child("sellerId").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String sellerId = snapshot.getValue(String.class);
+                if (currentUser.getUid().equals(sellerId)) {
+                    // Користувач є продавцем, можна оновлювати статус
+                    Map<String, Object> statusUpdate = new HashMap<>();
+                    statusUpdate.put("status", newStatus); // Оновлюємо лише поле status
+
+                    requestRef.updateChildren(statusUpdate)
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("FirebaseHelper", "Статус запиту " + requestId + " оновлено на " + newStatus);
+                                if (listener != null) listener.onSuccess();
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("FirebaseHelper", "Помилка оновлення статусу запиту " + requestId, e);
+                                if (listener != null) listener.onFailure(e);
+                            });
+                } else {
+                    Log.w("FirebaseHelper", "Спроба оновити статус запиту не власником (продавцем). CurrentUser: " +
+                            currentUser.getUid() + ", SellerID у запиті: " + sellerId + ", Запит ID: " + requestId);
+                    Toast.makeText(context, "Ви не можете змінити статус цього запиту.", Toast.LENGTH_SHORT).show();
+                    if (listener != null) listener.onFailure(new Exception("Доступ заборонено: ви не продавець"));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("FirebaseHelper", "Помилка перевірки sellerId для запиту " + requestId, error.toException());
+                if (listener != null) listener.onFailure(error.toException());
+            }
+        });
+    }
+
+    // Інтерфейс для callback при оновленні статусу запиту
+    public interface OnRequestUpdatedListener {
+        void onSuccess();
+        void onFailure(Exception e);
+    }
+    // === КІНЕЦЬ: Нові методи для роботи з запитами на купівлю ===
 
 
-    // Інтерфейс для обробки отриманого списку автомобілів
     public interface OnCarListLoadedListener {
         void onCarListLoaded(List<Car> carList);
     }
 
-    // Інтерфейс для обробки отриманого списку ID улюблених автомобілів
     public interface OnFavoriteCarIdsLoadedListener {
         void onFavoriteCarIdsLoaded(List<String> favoriteCarIds);
     }
