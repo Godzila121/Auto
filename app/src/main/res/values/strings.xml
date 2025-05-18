@@ -44,5 +44,8 @@
     </string>
     <string name="heart_button">Уподобати</string>
     <string name="car_image">Car image</string>
+    <string name="default_notification_channel_id" translatable="false">my_app_notifications_channel</string>
+    <string name="default_notification_channel_name">Загальні сповіщення</string>
+    <string name="default_notification_channel_description">Сповіщення про важливі події у додатку</string>
 
 </resources>

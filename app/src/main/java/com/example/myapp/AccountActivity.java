@@ -26,6 +26,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 
 public class AccountActivity extends AppCompatActivity {
 
@@ -117,6 +120,33 @@ public class AccountActivity extends AppCompatActivity {
         buttonAccount.setOnClickListener(v -> {
             Toast.makeText(this, "Ви вже на сторінці акаунта", Toast.LENGTH_SHORT).show();
         });
+        createNotificationChannel();
+    }
+    private void createNotificationChannel() {
+        // Створюємо NotificationChannel, але тільки для API 26+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // ID каналу. Має бути унікальним для вашого пакету.
+            String channelId = getString(R.string.default_notification_channel_id); // Визначимо цей рядок у strings.xml
+            // Назва каналу, яку бачить користувач у налаштуваннях додатку.
+            CharSequence name = getString(R.string.default_notification_channel_name);
+            // Опис каналу, який бачить користувач.
+            String description = getString(R.string.default_notification_channel_description);
+            // Важливість каналу. Визначає, як перериватиметься сповіщення.
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+            NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+            channel.setDescription(description);
+
+            // Реєструємо канал у системі. Після цього ви не можете змінити важливість
+            // або інші налаштування поведінки сповіщень; користувач має повний контроль.
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+                Log.d("NotificationChannel", "Канал сповіщень створено: " + channelId);
+            } else {
+                Log.e("NotificationChannel", "NotificationManager не знайдено.");
+            }
+        }
     }
 
     private void setupAuthListener() {
@@ -219,7 +249,6 @@ public class AccountActivity extends AppCompatActivity {
                     if (!task.isSuccessful()) {
                         Toast.makeText(this, "Помилка входу: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
-                    // AuthStateListener оновить UI
                 });
     }
 

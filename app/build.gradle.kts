@@ -37,6 +37,8 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.firebase:firebase-messaging:23.4.1") // Використовуйте останню стабільну версію
+    implementation ("com.google.firebase:firebase-analytics")
     implementation(libs.firebase.database) // для Firebase Database
     implementation(libs.firebase.auth) // для Firebase Authentication
     implementation ("com.google.code.gson:gson:2.8.8") // якщо вам потрібен Gson для роботи з JSON
